@@ -25,6 +25,8 @@ Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Ar
 - Supplied-art browser QA passed at 390x844 and 844x390; all four image URLs resolved, floor-two controls remained reachable, document height matched the viewport, and no warning/error logs were recorded.
 - Added a layered ascent pass: the far skyline scrolls 18px with 1.35px blur, the nearer city layer scrolls 34px with lighter blur, the horizon moves 9px, and the glass reflection briefly brightens and drifts. Mid-transition computed-style QA confirmed the transforms/filters and landing returned to floor 03 with no overflow.
 - Imported and normalized the full `@skedwards88/word_lists` common + uncommon corpus for playable lengths 2–13: 185,362 unique words. The browser smoke pass booted the larger bank, preserved the floor-one boarding screen, and advanced from a seed-selected imported target (`EX`) to floor 3 with no console errors.
+- Daily mode now preserves the shared daily seed for the first ascent, then changes its lobby card to `FRESH ASCENT` after a clear. Fresh ascents use a new per-run random seed, and success-screen retry follows the same behavior so each player can continue climbing without replaying the daily puzzle.
+- Daily replay QA passed: a completed current-day result changed the lobby card to `FRESH ASCENT`; two consecutive starts entered `FREEPLAY` at floor 1 with different seeds (`3221842000` and `2269510090`) and no console errors.
 
 ## Sound wishlist
 
