@@ -18,6 +18,7 @@ Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Ar
 
 - Syntax and JSON checks passed; `game.js` parses cleanly and the accepted-word data is valid.
 - Browser QA passed at default desktop, 390x844 portrait, and 844x390 landscape. The boarding state, floor-two board, lifelines, and keyboard fit with no document overflow or focus-driven scroll.
+- Repaired the published `accepted-words.json` blob after a truncated upload caused `Unexpected token 'Y'` during boot. The current deployment loads the full word list, reaches the lobby and boarding state, and no longer reports the floor-map JSON error. Added the existing control-panel PNG as the favicon to remove the remaining browser-console 404.
 - Verified daily start, physical keyboard entry, on-screen keyboard entry, invalid-word rejection, duplicate-aware evaluation path, reveal, clue panel, 50:50, floor 3-to-4 transition, pass-and-play handoff, challenge URL generation, resume, stats/history, audio toggle, failed result, and full 3-to-13-floor victory.
 - The browser smoke client produced a screenshot and `render_game_to_text` state with no console error artifact; final victory browser capture also had no warning/error logs.
 - The new seeded victory path reached floor 13 from the floor-one boarding state with 12 solved puzzles, 12 guesses, and an `ASCENT COMPLETE` modal; separate tabs produced the same floor-two and floor-three revealed letters for seed `123456`, and the browser reported no warning/error logs.
