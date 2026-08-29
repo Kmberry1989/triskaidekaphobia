@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#b87333">
+  <title>Triskaidekaphobia — Floor 13</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <section id="lobby-screen" aria-labelledby="lobby-title">
+      <div class="lobby-topline"><span><span class="signal-dot"></span> BUILDING 13</span><span id="backend-status">LOCAL ONLY</span></div>
+      <div class="lobby-hero">
+        <p class="eyebrow">THE ELEVATOR IS WAITING</p>
+        <h1 id="lobby-title">TRISKAIDEKAPHOBIA</h1>
+        <p class="lobby-copy">Board on floor one. Face a two-letter code on floor two, then climb one letter at a time until floor thirteen.</p>
+      </div>
+      <div class="lobby-controls">
+        <label for="player-handle">CALL SIGN</label>
+        <input id="player-handle" maxlength="16" autocomplete="nickname" value="Operator">
+        <div class="mode-grid">
+          <button class="mode-card primary" data-action="daily" type="button"><span class="mode-kicker">TODAY'S RUN</span><strong>DAILY ASCENT</strong><span>Same seed for everyone.</span></button>
+          <button class="mode-card" data-action="challenge" type="button"><span class="mode-kicker">SEND A CABLE</span><strong>CREATE CHALLENGE</strong><span>Make a replayable seed link.</span></button>
+          <button class="mode-card" data-action="pass-play" type="button"><span class="mode-kicker">TWO OPERATORS</span><strong>PASS &amp; PLAY</strong><span>Share one device, floor by floor.</span></button>
+        </div>
+        <div class="lobby-secondary">
+          <button class="text-button" data-action="resume" type="button" id="resume-btn" hidden>↻ RESUME RUN</button>
+          <button class="text-button" data-action="stats" type="button">▦ STATS / HISTORY</button>
+          <button class="audio-toggle" data-action="audio" type="button" aria-pressed="true">SOUND ON</button>
+        </div>
+      </div>
+      <p id="lobby-status" class="lobby-status" role="status"></p>
+    </section>
+
+    <section id="game-screen" hidden aria-labelledby="game-title">
+      <div id="window-parallax" aria-hidden="true">
+        <div class="parallax-layer parallax-sky"></div>
+        <div class="parallax-layer parallax-clouds"></div>
+        <div class="parallax-layer parallax-horizon"></div>
+        <div class="parallax-layer parallax-city"></div>
+        <div class="parallax-layer parallax-reflection"></div>
+        <div class="window-mullions"></div>
+      </div>
+      <header>
+        <div class="header-main">
+          <div><p class="eyebrow">ELEVATOR SHAFT <span id="mode-label">DAILY</span></p><h1 id="game-title">TRISKAIDEKAPHOBIA</h1></div>
+          <div class="header-actions"><button class="header-icon" data-action="game-stats" type="button" aria-label="Open stats and history">▦</button><button class="header-icon" data-action="quit" type="button" aria-label="Return to lobby">×</button></div>
+        </div>
+        <div id="stats-bar"><span id="stat-level">FLOOR 01 / 13</span><span id="stat-player">OPERATOR</span><span id="stat-timer">00:00</span></div>
+        <div class="progress-track" aria-label="Floor progress"><span id="floor-progress"></span></div>
+      </header>
+      <section id="boarding-state" aria-labelledby="boarding-title">
+        <span class="floor-marker">FLOOR 01 // LOBBY</span>
+        <h2 id="boarding-title">THE DOORS ARE OPEN</h2>
+        <p id="boarding-copy">Step into the car. Floor 02 is waiting with a two-letter code.</p>
+        <button class="outline-button" data-action="board-elevator" type="button">ENTER ELEVATOR</button>
+      </section>
+      <main id="board-canvas" aria-label="Word board"></main>
+      <div id="side-panel">
+        <section id="lifeline-hud" aria-label="Emergency lifelines">
+          <div class="lifeline-copy"><span class="eyebrow">EMERGENCY KIT</span><span id="lifeline-status">3 AVAILABLE</span></div>
+          <div class="lifeline-actions">
+            <button id="btn-reveal" class="lifeline-btn" data-action="reveal" type="button" aria-label="Reveal one correct letter"><span>◉</span><small>REVEAL</small></button>
+            <button id="btn-clue" class="lifeline-btn" data-action="clue" type="button" aria-label="Open the floor log clue"><span>▤</span><small>FLOOR LOG</small></button>
+            <button id="btn-fifty" class="lifeline-btn" data-action="fifty" type="button" aria-label="Remove half of the wrong letters"><span>⌁</span><small>50:50</small></button>
+          </div>
+        </section>
+        <footer id="keyboard-wrapper" aria-label="On-screen keyboard"></footer>
+      </div>
+      <p id="visible-status" class="visible-status" aria-live="polite"></p>
+      <p id="status-live" class="sr-only" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div id="feedback-overlay" class="overlay-hidden" aria-hidden="true"><section id="feedback-panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><button class="panel-close" data-action="close-feedback" type="button" aria-label="Close floor log">×</button><p class="eyebrow">FLOOR LOG // CLASSIFIED</p><h2 id="feedback-title">FIELD NOTE</h2><p id="feedback-pos" class="feedback-pos"></p><p id="feedback-copy"></p><button class="outline-button" data-action="close-feedback" type="button">BACK TO BOARD</button></section></div>
+  <div id="terminal-overlay" class="overlay-hidden" aria-hidden="true"><section id="terminal-panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="modal-headline"><div id="terminal-light" class="terminal-light" aria-hidden="true"></div><p class="eyebrow" id="modal-eyebrow">ELEVATOR STATUS</p><h2 id="modal-headline">CABLES SNAPPED</h2><p id="modal-summary"></p><div id="result-stats" class="result-stats"></div><div class="modal-actions"><button id="modal-action-btn" class="outline-button" data-action="retry" type="button">BOARD AGAIN</button><button id="share-result-btn" class="text-button" data-action="share" type="button">COPY RESULT</button><button class="text-button" data-action="lobby" type="button">RETURN TO LOBBY</button></div></section></div>
+  <div id="handoff-overlay" class="overlay-hidden" aria-hidden="true"><section class="panel handoff-panel" role="dialog" aria-modal="true" aria-labelledby="handoff-title"><p class="eyebrow">PASS THE DEVICE</p><h2 id="handoff-title">NEXT OPERATOR</h2><p id="handoff-copy">Hand the device to the next operator when the elevator doors open.</p><button class="outline-button" data-action="handoff-ready" type="button">I HAVE THE DEVICE</button></section></div>
+  <div id="stats-overlay" class="overlay-hidden" aria-hidden="true"><section class="panel stats-panel" role="dialog" aria-modal="true" aria-labelledby="stats-title"><button class="panel-close" data-action="close-stats" type="button" aria-label="Close stats">×</button><p class="eyebrow">BLACK BOX // RUN HISTORY</p><h2 id="stats-title">OPERATOR LOG</h2><div id="stats-summary" class="stats-summary"></div><div id="history-list" class="history-list"></div><button class="outline-button" data-action="close-stats" type="button">CLOSE LOG</button></section></div>
+  <script src="firebase-config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
