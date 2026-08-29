@@ -11,6 +11,8 @@ Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Ar
 - Added responsive viewport constraints plus atmospheric elevator motion and a sound-ready Web Audio layer with mute persistence. The game container now clips focus-driven scroll movement as well as touch/page overflow.
 - Added an opt-in Firebase adapter for anonymous auth, result publishing, challenge persistence, and leaderboard sorting, while retaining local storage when no Firebase web config is present.
 - Expanded the target catalog across floors 2–13 and added a 209-word accepted-guess list including the two-letter floor.
+- Replaced the small guess list with the normalized 2–13-letter union of `@skedwards88/word_lists` common and uncommon exports: 185,362 playable words. Every imported word can now be selected as a deterministic target; the original themed catalog supplies richer clues when one of those entries is chosen.
+- Added `assets/data/word-list-attribution.md` documenting the source, filtering, package version, and CC-BY-NC licensing constraint.
 
 ## Verification TODOs
 
@@ -22,6 +24,7 @@ Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Ar
 - Row-fit regression passed at 390x844: floor 13 produced thirteen 24.61px tiles in one row, row scroll width matched row width, all tile text fit, and document height matched the viewport.
 - Supplied-art browser QA passed at 390x844 and 844x390; all four image URLs resolved, floor-two controls remained reachable, document height matched the viewport, and no warning/error logs were recorded.
 - Added a layered ascent pass: the far skyline scrolls 18px with 1.35px blur, the nearer city layer scrolls 34px with lighter blur, the horizon moves 9px, and the glass reflection briefly brightens and drifts. Mid-transition computed-style QA confirmed the transforms/filters and landing returned to floor 03 with no overflow.
+- Imported and normalized the full `@skedwards88/word_lists` common + uncommon corpus for playable lengths 2–13: 185,362 unique words. The browser smoke pass booted the larger bank, preserved the floor-one boarding screen, and advanced from a seed-selected imported target (`EX`) to floor 3 with no console errors.
 
 ## Sound wishlist
 

@@ -87,13 +87,14 @@ const Floor13Audio = {
 };
 
 const Floor13Engine = {
-  mode: "DAILY", seed: 0, dictionary: {}, acceptedWords: new Set(), run: null, targetWord: "", targetWordMetadata: {}, currentGuess: [], shatteredKeys: new Set(), transitionTimer: null, timerHandle: null,
+  mode: "DAILY", seed: 0, dictionary: {}, acceptedWords: new Set(), wordsByLength: {}, run: null, targetWord: "", targetWordMetadata: {}, currentGuess: [], shatteredKeys: new Set(), transitionTimer: null, timerHandle: null,
   async boot() {
     try {
       const [dictionaryResponse, acceptedResponse] = await Promise.all([fetch("assets/data/dictionary.json"), fetch("assets/data/accepted-words.json")]);
       this.dictionary = await dictionaryResponse.json();
       this.acceptedWords = new Set((await acceptedResponse.json()).map(word => word.toUpperCase()));
       Object.values(this.dictionary).flat().forEach(entry => this.acceptedWords.add(entry.word.toUpperCase()));
+      this.wordsByLength = Object.fromEntries(FLOORS.map(floor => [floor, [...this.acceptedWords].filter(word => word.length === floor)]));
       await Floor13Remote.initialize();
       Floor13UI.init(); this.showLobby();
     } catch (error) { console.error("Failed to map building floors.", error); Floor13UI.showLobbyStatus("The elevator map could not load. Refresh to reconnect.", true); }
@@ -123,9 +124,11 @@ const Floor13Engine = {
     }
     document.getElementById("game-screen").classList.remove("boarding");
     this.run.attempts = this.run.guesses.filter(guess => guess.floor === this.run.floor).length;
-    const floorList = this.dictionary[`${this.run.floor}_letters`] || [];
-    const index = Math.floor(Math.abs(Math.sin(this.seed + this.run.floor)) * floorList.length);
-    this.targetWordMetadata = floorList[index] || { word: "CAT", pos: "Noun", hint: "A small familiar mammal." };
+    const floorList = this.wordsByLength[this.run.floor] || [];
+    const index = floorList.length ? Math.floor(Math.abs(Math.sin(this.seed + this.run.floor)) * floorList.length) : 0;
+    this.targetWord = floorList[index] || "CAT";
+    const themedFloorList = this.dictionary[`${this.run.floor}_letters`] || [];
+    this.targetWordMetadata = themedFloorList.find(entry => entry.word.toUpperCase() === this.targetWord) || { word: this.targetWord, pos: "Word bank", hint: `A ${this.run.floor}-letter word from the shared Building 13 word bank.` };
     this.targetWord = this.targetWordMetadata.word.toUpperCase(); this.currentGuess = Array(this.run.floor).fill(""); this.shatteredKeys = new Set();
     document.documentElement.style.setProperty("--grid-columns", this.run.floor); Floor13UI.renderBoard(); Floor13UI.renderKeyboard(); Floor13UI.updateHeader(); this.replayFloorGuesses(); Floor13UI.updateKeyboardStates(); Floor13Storage.write(STORAGE_KEYS.active, this.run);
   },
