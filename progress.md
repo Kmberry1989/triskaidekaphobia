@@ -1,0 +1,42 @@
+Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Arcade + Social Competition.
+
+## Current implementation
+
+- Rebuilt the single-page experience around a local-first lobby, deterministic daily/challenge seeds, pass-and-play, resume, stats/history, and shareable challenge URLs.
+- Updated the ascent model so operators board on floor 1, solve a two-letter puzzle on floor 2, and progress one letter per floor through a thirteen-letter floor 13 puzzle.
+- Added a parallax glass-window scene with moving clouds, skyline silhouettes, reflections, window mullions, and floor-linked motion behind the board.
+- Integrated the supplied PNG art: `elevator-interior.png` is the base car scene, `outside-parallax.png` drives the depth layers, `glass-reflection-overlay.png` adds the window texture, and `elevator-control-panel.png` decorates the boarding state without replacing semantic controls.
+- Forced every guess row into a single non-wrapping horizontal strip; tile widths and letter size now shrink with the active floor length so floor 13 remains readable on narrow screens.
+- Added explicit run/result state, local storage, accepted-word validation, duplicate-aware scoring, keyboard states, in-page clues, improved lifelines, result summaries, and accessibility semantics.
+- Added responsive viewport constraints plus atmospheric elevator motion and a sound-ready Web Audio layer with mute persistence. The game container now clips focus-driven scroll movement as well as touch/page overflow.
+- Added an opt-in Firebase adapter for anonymous auth, result publishing, challenge persistence, and leaderboard sorting, while retaining local storage when no Firebase web config is present.
+- Expanded the target catalog across floors 2–13 and added a 209-word accepted-guess list including the two-letter floor.
+
+## Verification TODOs
+
+- Syntax and JSON checks passed; `game.js` parses cleanly and the accepted-word data is valid.
+- Browser QA passed at default desktop, 390x844 portrait, and 844x390 landscape. The boarding state, floor-two board, lifelines, and keyboard fit with no document overflow or focus-driven scroll.
+- Verified daily start, physical keyboard entry, on-screen keyboard entry, invalid-word rejection, duplicate-aware evaluation path, reveal, clue panel, 50:50, floor 3-to-4 transition, pass-and-play handoff, challenge URL generation, resume, stats/history, audio toggle, failed result, and full 3-to-13-floor victory.
+- The browser smoke client produced a screenshot and `render_game_to_text` state with no console error artifact; final victory browser capture also had no warning/error logs.
+- The new seeded victory path reached floor 13 from the floor-one boarding state with 12 solved puzzles, 12 guesses, and an `ASCENT COMPLETE` modal; separate tabs produced the same floor-two and floor-three revealed letters for seed `123456`, and the browser reported no warning/error logs.
+- Row-fit regression passed at 390x844: floor 13 produced thirteen 24.61px tiles in one row, row scroll width matched row width, all tile text fit, and document height matched the viewport.
+- Supplied-art browser QA passed at 390x844 and 844x390; all four image URLs resolved, floor-two controls remained reachable, document height matched the viewport, and no warning/error logs were recorded.
+- Added a layered ascent pass: the far skyline scrolls 18px with 1.35px blur, the nearer city layer scrolls 34px with lighter blur, the horizon moves 9px, and the glass reflection briefly brightens and drifts. Mid-transition computed-style QA confirmed the transforms/filters and landing returned to floor 03 with no overflow.
+
+## Sound wishlist
+
+- Door open/close: heavy, damped metal movement with a soft hydraulic hiss and a clean arrival chime.
+- Floor select/boarding: tactile copper relay click, followed by a small confirmation ping.
+- Elevator movement: low sub-bass motor hum that rises gently, with cable resonance kept felt rather than loud.
+- Letter input: dry, intimate button click with a short mechanical tail.
+- Correct guess: restrained three-note glass-and-metal chord, warm rather than celebratory.
+- Present letter: muted amber ping with a slightly detuned second tone.
+- Invalid word: brief relay buzz and a soft warning-light tick; never an aggressive error beep.
+- Reveal: narrow radio sweep resolving into a bright pinpoint tone.
+- 50:50: two quick electrical pops, then a small air-release sound as the wrong keys go dark.
+- Floor arrival: brake thump, cable settle, door chime, and a half-second shaft ambience.
+- Pass-and-play handoff: hush the motor, latch click, then a clear spoken-free handoff pulse.
+- Run clear: ascending harmonic bed, gentle bell, and room tone opening into space.
+- Failure: strained cable groan, power dip, hard brake stop, and a red warning pulse.
+- Firebase hosting is not enabled until a project web config is supplied in `firebase-config.js`; offline play and local history remain the default.
+- PNG asset generation is pending: the key is configured, but all four image requests returned `429 credit_balance_exhausted`, so no fake art was added. Intended outputs remain elevator interior/car, layered outside parallax, and elevator control buttons.

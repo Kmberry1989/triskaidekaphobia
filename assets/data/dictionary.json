@@ -1,0 +1,94 @@
+{
+  "2_letters": [
+    { "word": "AT", "pos": "Preposition", "hint": "A position beside or near a point in time or space." },
+    { "word": "GO", "pos": "Verb", "hint": "To move from one place toward another." },
+    { "word": "IN", "pos": "Preposition", "hint": "Contained by or located within the elevator car." },
+    { "word": "ON", "pos": "Preposition", "hint": "Supported by or riding upon a surface." },
+    { "word": "UP", "pos": "Adverb", "hint": "Toward a higher position or floor." },
+    { "word": "WE", "pos": "Pronoun", "hint": "The operators sharing this ascent." }
+  ],
+  "3_letters": [
+    { "word": "CAT", "pos": "Noun", "hint": "A small, domesticated carnivorous mammal known for purring." },
+    { "word": "BOX", "pos": "Noun", "hint": "A rigid container, typically square or rectangular." },
+    { "word": "FLY", "pos": "Verb", "hint": "To move through the air using wings or mechanical lift." },
+    { "word": "KEY", "pos": "Noun", "hint": "A small instrument used to open a lock or start a machine." },
+    { "word": "SKY", "pos": "Noun", "hint": "The expanse above the earth where the elevator cables disappear." },
+    { "word": "SUN", "pos": "Noun", "hint": "The star that lights the world outside the shaft." }
+  ],
+  "4_letters": [
+    { "word": "FROG", "pos": "Noun", "hint": "A tailless amphibian known for jumping and croaking." },
+    { "word": "GLOW", "pos": "Verb", "hint": "To emit a steady, soft light without an active flame." },
+    { "word": "DOOR", "pos": "Noun", "hint": "The heavy panel that seals an elevator entrance." },
+    { "word": "HALL", "pos": "Noun", "hint": "A passage connecting one floor to another." },
+    { "word": "LAMP", "pos": "Noun", "hint": "A fixture that keeps the emergency station visible." },
+    { "word": "VOID", "pos": "Noun", "hint": "The dark open space below a stopped elevator." }
+  ],
+  "5_letters": [
+    { "word": "SHARK", "pos": "Noun", "hint": "A predatory marine fish with a cartilaginous skeleton and sharp teeth." },
+    { "word": "LIGHT", "pos": "Noun", "hint": "The natural agent that stimulates sight and makes things visible." },
+    { "word": "ALARM", "pos": "Noun", "hint": "A warning signal that something in the shaft needs attention." },
+    { "word": "CABLE", "pos": "Noun", "hint": "The thick line supporting the elevator car." },
+    { "word": "SIREN", "pos": "Noun", "hint": "A loud warning sound used during a building emergency." },
+    { "word": "STAIR", "pos": "Noun", "hint": "A single step in the route between floors." }
+  ],
+  "6_letters": [
+    { "word": "SYSTEM", "pos": "Noun", "hint": "A set of things working together as parts of a mechanism or network." },
+    { "word": "ORANGE", "pos": "Noun", "hint": "A round juicy citrus fruit with a tough, bright reddish-yellow rind." },
+    { "word": "ASCENT", "pos": "Noun", "hint": "The act of moving upward through the building." },
+    { "word": "BEACON", "pos": "Noun", "hint": "A light or signal that guides someone through darkness." },
+    { "word": "ENGINE", "pos": "Noun", "hint": "A machine that supplies motion to the elevator system." },
+    { "word": "TUNNEL", "pos": "Noun", "hint": "A passage running beneath or through a structure." }
+  ],
+  "7_letters": [
+    { "word": "JOURNEY", "pos": "Noun", "hint": "An act of traveling from one place to another over a distance." },
+    { "word": "WEATHER", "pos": "Noun", "hint": "The state of the atmosphere at a place and time regarding heat or rain." },
+    { "word": "CABINET", "pos": "Noun", "hint": "A compartment that houses switches, tools, or emergency equipment." },
+    { "word": "CEILING", "pos": "Noun", "hint": "The upper interior surface of a room or elevator car." },
+    { "word": "CIRCUIT", "pos": "Noun", "hint": "A complete path through which electrical current can travel." },
+    { "word": "SIGNALS", "pos": "Noun", "hint": "Messages sent through lights, sounds, or radio." },
+    { "word": "AIRLOCK", "pos": "Noun", "hint": "A sealed chamber with doors that prevent pressure from escaping." },
+    { "word": "OUTPOST", "pos": "Noun", "hint": "A small station positioned far from the main base." }
+  ],
+  "8_letters": [
+    { "word": "COMPUTER", "pos": "Noun", "hint": "An electronic device for storing, retrieving, and processing data." },
+    { "word": "MOUNTAIN", "pos": "Noun", "hint": "A large natural elevation of the earth's surface rising abruptly." },
+    { "word": "ELEVATOR", "pos": "Noun", "hint": "A car that carries people vertically between floors." },
+    { "word": "PRESSURE", "pos": "Noun", "hint": "The force building inside a confined space or system." }
+  ],
+  "9_letters": [
+    { "word": "BEAUTIFUL", "pos": "Adjective", "hint": "Pleasing the senses or mind aesthetically; highly attractive." },
+    { "word": "CHALLENGE", "pos": "Noun", "hint": "A call to take part in a contest or a task that tests abilities." },
+    { "word": "COMMUNITY", "pos": "Noun", "hint": "People connected by a shared place, purpose, or challenge." },
+    { "word": "DANGEROUS", "pos": "Adjective", "hint": "Likely to cause harm if treated carelessly." },
+    { "word": "DISCOVERY", "pos": "Noun", "hint": "Something found or learned for the first time." }
+  ],
+  "10_letters": [
+    { "word": "EXPERIMENT", "pos": "Noun", "hint": "A scientific procedure undertaken to make a discovery or test a hypothesis." },
+    { "word": "BACKGROUND", "pos": "Noun", "hint": "The area or scenery behind the main object of contemplation or interest." },
+    { "word": "LIGHTHOUSE", "pos": "Noun", "hint": "A tower with a light that guides people away from danger." },
+    { "word": "TECHNOLOGY", "pos": "Noun", "hint": "The practical application of knowledge through tools and machines." },
+    { "word": "TRANSITION", "pos": "Noun", "hint": "The process of moving from one state or floor to another." },
+    { "word": "SUPERVISOR", "pos": "Noun", "hint": "A person responsible for overseeing a team or operation." }
+  ],
+  "11_letters": [
+    { "word": "INFORMATION", "pos": "Noun", "hint": "Facts provided or learned about something or someone; processed data." },
+    { "word": "DEVELOPMENT", "pos": "Noun", "hint": "The process of developing, growing, or expanding into a more mature state." },
+    { "word": "CELEBRATION", "pos": "Noun", "hint": "A gathering or event held to mark something special." },
+    { "word": "ENGINEERING", "pos": "Noun", "hint": "The design and building of machines, systems, or structures." },
+    { "word": "UNDERGROUND", "pos": "Adjective", "hint": "Existing below the surface of the earth or building." },
+    { "word": "TEMPERATURE", "pos": "Noun", "hint": "The degree of heat present in a place or system." }
+  ],
+  "12_letters": [
+    { "word": "HEADQUARTERS", "pos": "Noun", "hint": "The main administrative center or operations center of an enterprise." },
+    { "word": "ORGANIZATION", "pos": "Noun", "hint": "An organized body of people with a particular purpose, such as a business." },
+    { "word": "INSTRUCTIONS", "pos": "Noun", "hint": "Directions explaining how to operate a device or complete a task." },
+    { "word": "RELATIONSHIP", "pos": "Noun", "hint": "The way in which two or more people or things are connected." }
+  ],
+  "13_letters": [
+    { "word": "CONSIDERATION", "pos": "Noun", "hint": "Careful thought, typically over a period of time, before making a choice." },
+    { "word": "ENTERTAINMENT", "pos": "Noun", "hint": "The action of providing or being provided with amusement or enjoyment." },
+    { "word": "COLLABORATION", "pos": "Noun", "hint": "The act of working with others toward a shared result." },
+    { "word": "CONCENTRATION", "pos": "Noun", "hint": "The act of giving complete attention to something." },
+    { "word": "UNDERSTANDING", "pos": "Noun", "hint": "Knowledge of the meaning or nature of something." }
+  ]
+}
