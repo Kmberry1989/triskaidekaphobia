@@ -1,0 +1,107 @@
+- generic [active] [ref=e1]:
+  - region [ref=e32]:
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - paragraph [ref=e36]: ELEVATOR SHAFT DAILY
+          - heading "TRISKAIDEKAPHOBIA" [level=1] [ref=e37]
+        - generic [ref=e38]:
+          - button "Open stats and history" [ref=e39] [cursor=pointer]: ▦
+          - button "Return to lobby" [ref=e40] [cursor=pointer]: ×
+      - generic [ref=e41]:
+        - generic [ref=e42]: FLOOR 01 / 13
+        - generic [ref=e43]: OPERATOR
+        - generic [ref=e44]: 00:01
+      - generic "Floor progress" [ref=e45]
+    - region [ref=e46]:
+      - generic [ref=e47]: FLOOR 01 // LOBBY
+      - heading "THE DOORS ARE OPEN" [level=2] [ref=e48]
+      - paragraph [ref=e49]: Step into the car. Floor 02 is waiting with a two-letter code.
+      - button "ENTER ELEVATOR" [ref=e50] [cursor=pointer]
+    - generic [ref=e51]:
+      - region "Emergency lifelines" [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: EMERGENCY KIT
+          - generic [ref=e55]: 3 AVAILABLE
+        - generic [ref=e56]:
+          - button "Reveal one correct letter" [disabled] [ref=e57]:
+            - generic [ref=e58]: ◉
+            - generic [ref=e59]: REVEAL
+          - button "Open the floor log clue" [disabled] [ref=e60]:
+            - generic [ref=e61]: ▤
+            - generic [ref=e62]: FLOOR LOG
+          - button "Remove half of the wrong letters" [disabled] [ref=e63]:
+            - generic [ref=e64]: ⌁
+            - generic [ref=e65]: 50:50
+      - generic "On-screen keyboard" [ref=e66]:
+        - generic [ref=e67]:
+          - button "Letter Q" [ref=e68] [cursor=pointer]: Q
+          - button "Letter W" [ref=e69] [cursor=pointer]: W
+          - button "Letter E" [ref=e70] [cursor=pointer]: E
+          - button "Letter R" [ref=e71] [cursor=pointer]: R
+          - button "Letter T" [ref=e72] [cursor=pointer]: T
+          - button "Letter Y" [ref=e73] [cursor=pointer]: "Y"
+          - button "Letter U" [ref=e74] [cursor=pointer]: U
+          - button "Letter I" [ref=e75] [cursor=pointer]: I
+          - button "Letter O" [ref=e76] [cursor=pointer]: O
+          - button "Letter P" [ref=e77] [cursor=pointer]: P
+        - generic [ref=e78]:
+          - button "Letter A" [ref=e79] [cursor=pointer]: A
+          - button "Letter S" [ref=e80] [cursor=pointer]: S
+          - button "Letter D" [ref=e81] [cursor=pointer]: D
+          - button "Letter F" [ref=e82] [cursor=pointer]: F
+          - button "Letter G" [ref=e83] [cursor=pointer]: G
+          - button "Letter H" [ref=e84] [cursor=pointer]: H
+          - button "Letter J" [ref=e85] [cursor=pointer]: J
+          - button "Letter K" [ref=e86] [cursor=pointer]: K
+          - button "Letter L" [ref=e87] [cursor=pointer]: L
+        - generic [ref=e88]:
+          - button "Submit guess" [ref=e89] [cursor=pointer]: ↵
+          - button "Letter Z" [ref=e90] [cursor=pointer]: Z
+          - button "Letter X" [ref=e91] [cursor=pointer]: X
+          - button "Letter C" [ref=e92] [cursor=pointer]: C
+          - button "Letter V" [ref=e93] [cursor=pointer]: V
+          - button "Letter B" [ref=e94] [cursor=pointer]: B
+          - button "Letter N" [ref=e95] [cursor=pointer]: "N"
+          - button "Letter M" [ref=e96] [cursor=pointer]: M
+          - button "Backspace" [ref=e97] [cursor=pointer]: ⌫
+    - paragraph [ref=e98]
+    - paragraph [ref=e99]
+  - generic:
+    - dialog:
+      - button: ×
+      - paragraph: FLOOR LOG // CLASSIFIED
+      - heading [level=2]: FIELD NOTE
+      - button: BACK TO BOARD
+  - generic:
+    - dialog:
+      - paragraph: ELEVATOR STATUS
+      - heading [level=2]: CABLES SNAPPED
+      - generic:
+        - button: BOARD AGAIN
+        - button: COPY RESULT
+        - button: RETURN TO LOBBY
+  - generic:
+    - dialog:
+      - paragraph: PASS THE DEVICE
+      - heading [level=2]: NEXT OPERATOR
+      - paragraph: Hand the device to the next operator when the elevator doors open.
+      - button: I HAVE THE DEVICE
+  - generic:
+    - dialog:
+      - button: ×
+      - paragraph: BLACK BOX // RUN HISTORY
+      - heading [level=2]: OPERATOR LOG
+      - generic:
+        - generic:
+          - generic: "0"
+          - generic: RUNS
+        - generic:
+          - generic: "0"
+          - generic: CLEARS
+        - generic:
+          - generic: "0"
+          - generic: BEST FLOOR
+      - generic:
+        - paragraph: No completed runs yet. The building is waiting.
+      - button: CLOSE LOG
