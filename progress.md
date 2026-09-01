@@ -28,6 +28,8 @@ Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Ar
 - Imported and normalized the full `@skedwards88/word_lists` common + uncommon corpus for playable lengths 2–13: 185,362 unique words. The browser smoke pass booted the larger bank, preserved the floor-one boarding screen, and advanced from a seed-selected imported target (`EX`) to floor 3 with no console errors.
 - Daily mode now preserves the shared daily seed for the first ascent, then changes its lobby card to `FRESH ASCENT` after a clear. Fresh ascents use a new per-run random seed, and success-screen retry follows the same behavior so each player can continue climbing without replaying the daily puzzle.
 - Daily replay QA passed: a completed current-day result changed the lobby card to `FRESH ASCENT`; two consecutive starts entered `FREEPLAY` at floor 1 with different seeds (`3221842000` and `2269510090`) and no console errors.
+- Added explicit `isValidGuess` checking for every full-length submission and a themed `ACCESS DENIED` state for unknown words. Invalid guesses retain their letters, do not increment `run.attempts`, mark the active row with a red pulse, announce `NO ATTEMPT USED`, and clear on edit. Added the state to `render_game_to_text` for browser verification.
+- Invalid-entry browser QA passed in the default viewport plus 390x844 portrait and 844x390 landscape: `ZZ` stayed in the active row, the floor remained 02 with no attempt consumed, the warning and `NO ATTEMPT USED` cue stayed visible without covering controls, editing cleared the warning, and `AT` consumed one normal attempt. No console warnings or errors were recorded; `node --check game.js` and JSON parsing passed.
 
 ## Sound wishlist
 

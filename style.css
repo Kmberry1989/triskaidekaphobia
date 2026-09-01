@@ -32,7 +32,7 @@ h1 { color: var(--copper); font-size: clamp(1.6rem, 5vw, 2.6rem); letter-spacing
 .audio-toggle { margin-left: auto; }
 .lobby-status { min-height: 18px; color: var(--safe); font-size: .62rem; line-height: 1.4; }
 .lobby-status.error { color: var(--red); }
-#game-screen { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 9px; position: relative; isolation: isolate; background: linear-gradient(180deg, rgba(9,12,17,.3), rgba(9,9,11,.72)); }
+#game-screen { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto; gap: 9px; position: relative; isolation: isolate; background: linear-gradient(180deg, rgba(9,12,17,.3), rgba(9,9,11,.72)); }
 #game-screen > *:not(#window-parallax) { position: relative; z-index: 1; }
 #window-parallax { position: absolute; inset: -10%; overflow: hidden; z-index: 0; pointer-events: none; background: #101a29 url("assets/art/elevator-interior.png") center / cover no-repeat; }
 .parallax-layer { position: absolute; inset: 0; will-change: transform, filter; transition: transform .72s cubic-bezier(.2,.72,.2,1); }
@@ -96,6 +96,13 @@ header { border-bottom: 1px dashed var(--line); padding: 1px 0 8px; }
 .keyboard-key.absent { background: #151519; color: #67676f; border-color: #25252a; }
 .keyboard-key.shattered { animation: keyShatter .5s ease forwards; pointer-events: none; }
 .keyboard-key[data-key="ENTER"], .keyboard-key[data-key="BACKSPACE"] { flex: 1.35; background: #46464e; font-size: 1.15rem; }
+.board-row.invalid-row .letter-box { border-color: rgba(255,74,66,.76); box-shadow: inset 0 0 0 1px rgba(255,74,66,.12), 0 0 10px rgba(255,74,66,.12); }
+#game-screen > .invalid-entry { position: relative; z-index: 4; width: min(calc(100% - 24px), 430px); margin: 0 auto; display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid rgba(255,74,66,.68); border-left: 3px solid var(--red); border-radius: 5px; background: linear-gradient(105deg, rgba(48,14,16,.97), rgba(22,13,16,.94)); box-shadow: 0 10px 30px rgba(0,0,0,.42), inset 0 0 22px rgba(255,74,66,.08); pointer-events: none; }
+.invalid-entry-signal { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid rgba(255,184,137,.72); border-radius: 50%; color: #ffe0ca; background: rgba(255,74,66,.28); font-size: .82rem; font-weight: bold; box-shadow: 0 0 12px rgba(255,74,66,.32); }
+.invalid-entry-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; color: #f1d2c9; font-size: .58rem; line-height: 1.35; letter-spacing: .35px; }
+.invalid-entry-copy strong { color: #ff8f77; font-size: .64rem; letter-spacing: 1.1px; }
+.invalid-entry-retained { color: #ffc07e; font-size: .49rem; line-height: 1.25; letter-spacing: .65px; text-align: right; }
+.invalid-entry-flash { animation: invalidEntryFlash .42s ease-out; }
 .overlay-hidden { opacity: 0; pointer-events: none; }
 .overlay-visible { opacity: 1; pointer-events: auto; }
 #feedback-overlay, #terminal-overlay, #handoff-overlay, #stats-overlay { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(5,5,7,.9); transition: opacity .2s; }
@@ -124,6 +131,7 @@ header { border-bottom: 1px dashed var(--line); padding: 1px 0 8px; }
 .handoff-panel { background: radial-gradient(circle at 50% 0, #18241c, #100e10 68%); }
 .handoff-panel h2 { color: var(--safe); }
 @keyframes keyShatter { 0% { transform: rotate(0) scale(1); opacity: 1; } 100% { transform: rotate(18deg) translateY(16px) scale(.4); opacity: .1; } }
+@keyframes invalidEntryFlash { 0% { transform: scale(.96); opacity: .2; } 55% { transform: scale(1.015); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes elevatorAscend { 20% { transform: translateY(2px); filter: brightness(1.25); } 45% { transform: translateY(-4px); filter: brightness(.7); } 75% { transform: translateY(2px); filter: brightness(1.15); } }
 @keyframes farSkyAscend { 0%,100% { transform: translate3d(calc(var(--floor-shift, 0px) * .2), 0, 0) scale(1.04); } 42% { transform: translate3d(calc(var(--floor-shift, 0px) * .2), -18px, 0) scale(1.065); } }
 @keyframes horizonAscend { 0%,100% { transform: translate3d(0, calc(var(--floor-shift, 0px) * -1), 0); } 42% { transform: translate3d(0, -9px, 0); } }
@@ -136,10 +144,12 @@ header { border-bottom: 1px dashed var(--line); padding: 1px 0 8px; }
 .shake-error { animation: elevatorWobble .32s ease-in-out; }
 @media (orientation: landscape) and (max-height: 600px) {
   #game-container { width: 100vw; max-width: 980px; min-height: 0; padding: 8px 12px; }
-  #game-screen { grid-template-columns: minmax(0, 1.18fr) minmax(290px, .82fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 14px; }
+  #game-screen { grid-template-columns: minmax(0, 1.18fr) minmax(290px, .82fr); grid-template-rows: auto minmax(0, 1fr) auto auto; column-gap: 14px; }
   #game-screen > header { grid-column: 1 / -1; }
   #board-canvas { grid-column: 1; grid-row: 2; }
   #side-panel { grid-column: 2; grid-row: 2; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+  #game-screen > .invalid-entry { grid-column: 1 / -1; grid-row: 3; }
+  #game-screen > .visible-status { grid-column: 1 / -1; grid-row: 4; }
   #lifeline-hud { align-items: center; }
   #keyboard-wrapper { justify-content: center; }
   .keyboard-key { height: clamp(27px, 9vh, 38px); }

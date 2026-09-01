@@ -70,6 +70,11 @@
         </section>
         <footer id="keyboard-wrapper" aria-label="On-screen keyboard"></footer>
       </div>
+      <div id="invalid-entry" class="invalid-entry" hidden role="status" aria-live="polite" aria-atomic="true">
+        <span class="invalid-entry-signal" aria-hidden="true">!</span>
+        <span class="invalid-entry-copy"><strong>ACCESS DENIED</strong><span id="invalid-entry-message"></span></span>
+        <span class="invalid-entry-retained">NO ATTEMPT USED</span>
+      </div>
       <p id="visible-status" class="visible-status" aria-live="polite"></p>
       <p id="status-live" class="sr-only" aria-live="polite"></p>
     </section>
