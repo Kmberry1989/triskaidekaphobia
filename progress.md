@@ -30,6 +30,8 @@ Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Ar
 - Daily replay QA passed: a completed current-day result changed the lobby card to `FRESH ASCENT`; two consecutive starts entered `FREEPLAY` at floor 1 with different seeds (`3221842000` and `2269510090`) and no console errors.
 - Added explicit `isValidGuess` checking for every full-length submission and a themed `ACCESS DENIED` state for unknown words. Invalid guesses retain their letters, do not increment `run.attempts`, mark the active row with a red pulse, announce `NO ATTEMPT USED`, and clear on edit. Added the state to `render_game_to_text` for browser verification.
 - Invalid-entry browser QA passed in the default viewport plus 390x844 portrait and 844x390 landscape: `ZZ` stayed in the active row, the floor remained 02 with no attempt consumed, the warning and `NO ATTEMPT USED` cue stayed visible without covering controls, editing cleared the warning, and `AT` consumed one normal attempt. No console warnings or errors were recorded; `node --check game.js` and JSON parsing passed.
+- Curated target validation now uses only the 68 themed entries from `dictionary.json`, while the 185,362-word accepted list remains available for guesses. Boot rejects missing or malformed target metadata instead of falling back to an arbitrary answer; all floors 2–13 have a part of speech and clue.
+- Curated-target browser QA passed: the Floor Log showed the selected floor-two clue and part of speech, using the clue did not consume an attempt, `GHI` remained a valid three-letter guess but was not an answer candidate, and closing the spent clue lifeline returned focus to the board without console errors.
 
 ## Sound wishlist
 

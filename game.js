@@ -87,13 +87,24 @@ const Floor13Audio = {
 };
 
 const Floor13Engine = {
-  mode: "DAILY", seed: 0, dictionary: {}, acceptedWords: new Set(), wordsByLength: {}, run: null, targetWord: "", targetWordMetadata: {}, currentGuess: [], shatteredKeys: new Set(), transitionTimer: null, timerHandle: null,
+  mode: "DAILY", seed: 0, dictionary: {}, acceptedWords: new Set(), wordsByLength: {}, targetWordsByLength: {}, targetMetadataByWord: {}, run: null, targetWord: "", targetWordMetadata: {}, currentGuess: [], shatteredKeys: new Set(), transitionTimer: null, timerHandle: null,
   async boot() {
     try {
       const [dictionaryResponse, acceptedResponse] = await Promise.all([fetch("assets/data/dictionary.json"), fetch("assets/data/accepted-words.json")]);
       this.dictionary = await dictionaryResponse.json();
       this.acceptedWords = new Set((await acceptedResponse.json()).map(word => word.toUpperCase()));
-      Object.values(this.dictionary).flat().forEach(entry => this.acceptedWords.add(entry.word.toUpperCase()));
+      const puzzleFloors = FLOORS.slice(1);
+      const targetEntries = puzzleFloors.flatMap(floor => {
+        const entries = this.dictionary[`${floor}_letters`];
+        if (!Array.isArray(entries)) throw new Error(`Missing curated target list for floor ${floor}.`);
+        return entries.map(entry => {
+          if (!entry || typeof entry.word !== "string" || entry.word.length !== floor || typeof entry.pos !== "string" || typeof entry.hint !== "string" || !entry.hint.trim()) throw new Error(`Invalid curated target metadata for floor ${floor}.`);
+          return { ...entry, word: entry.word.toUpperCase() };
+        });
+      });
+      this.targetMetadataByWord = Object.fromEntries(targetEntries.map(entry => [entry.word, entry]));
+      this.targetWordsByLength = Object.fromEntries(puzzleFloors.map(floor => [floor, targetEntries.filter(entry => entry.word.length === floor).map(entry => entry.word)]));
+      Object.values(this.targetMetadataByWord).forEach(entry => this.acceptedWords.add(entry.word));
       this.wordsByLength = Object.fromEntries(FLOORS.map(floor => [floor, [...this.acceptedWords].filter(word => word.length === floor)]));
       await Floor13Remote.initialize();
       Floor13UI.init(); this.showLobby();
@@ -126,12 +137,17 @@ const Floor13Engine = {
     }
     document.getElementById("game-screen").classList.remove("boarding");
     this.run.attempts = this.run.guesses.filter(guess => guess.floor === this.run.floor).length;
-    const floorList = this.wordsByLength[this.run.floor] || [];
-    const index = floorList.length ? Math.floor(Math.abs(Math.sin(this.seed + this.run.floor)) * floorList.length) : 0;
-    this.targetWord = floorList[index] || "CAT";
-    const themedFloorList = this.dictionary[`${this.run.floor}_letters`] || [];
-    this.targetWordMetadata = themedFloorList.find(entry => entry.word.toUpperCase() === this.targetWord) || { word: this.targetWord, pos: "Word bank", hint: `A ${this.run.floor}-letter word from the shared Building 13 word bank.` };
-    this.targetWord = this.targetWordMetadata.word.toUpperCase(); this.currentGuess = Array(this.run.floor).fill(""); this.shatteredKeys = new Set();
+    const floorList = this.targetWordsByLength[this.run.floor] || [];
+    if (!floorList.length) {
+      console.error(`No curated target is available for floor ${this.run.floor}.`);
+      Floor13UI.showLobbyStatus("This floor's answer file could not load. Refresh to reconnect.", true);
+      this.showLobby();
+      return;
+    }
+    const index = Math.floor(Math.abs(Math.sin(this.seed + this.run.floor)) * floorList.length);
+    this.targetWord = floorList[index];
+    this.targetWordMetadata = this.targetMetadataByWord[this.targetWord];
+    this.currentGuess = Array(this.run.floor).fill(""); this.shatteredKeys = new Set();
     document.documentElement.style.setProperty("--grid-columns", this.run.floor); Floor13UI.renderBoard(); Floor13UI.renderKeyboard(); Floor13UI.updateHeader(); this.replayFloorGuesses(); Floor13UI.updateKeyboardStates(); Floor13Storage.write(STORAGE_KEYS.active, this.run);
   },
   replayFloorGuesses() { this.run.guesses.filter(guess => guess.floor === this.run.floor).forEach(guess => Floor13UI.paintGuess(guess.row, guess.word, guess.evaluation)); },
@@ -201,7 +217,7 @@ const Floor13UI = {
   showInvalidEntry(guess) { const panel = document.getElementById("invalid-entry"); document.getElementById("invalid-entry-message").textContent = `${guess} is not cleared for this floor.`; panel.hidden = false; panel.classList.remove("invalid-entry-flash"); void panel.offsetWidth; panel.classList.add("invalid-entry-flash"); this.shakeActiveRow(true); this.setStatus(`${guess} // UNKNOWN WORD // ATTEMPT RETAINED`, "EDIT ROW // TRY AGAIN"); },
   clearInvalidEntry() { const panel = document.getElementById("invalid-entry"); if (!panel.hidden) { panel.hidden = true; panel.classList.remove("invalid-entry-flash"); this.setStatus(""); } document.querySelector(`.board-row[data-row="${Floor13Engine.run?.attempts}"]`)?.classList.remove("invalid-row"); },
   openFeedback(metadata) { this.lastFocusedElement = document.activeElement; document.getElementById("feedback-pos").textContent = metadata.pos || "FIELD NOTE"; document.getElementById("feedback-copy").textContent = metadata.hint; this.showOverlay("feedback-overlay"); document.querySelector("#feedback-panel .panel-close").focus(); },
-  closeFeedback() { this.hideOverlay("feedback-overlay"); this.lastFocusedElement?.focus?.(); },
+  closeFeedback() { const returnTarget = this.lastFocusedElement?.disabled ? document.getElementById("board-canvas") : this.lastFocusedElement; if (returnTarget && !returnTarget.hasAttribute("tabindex")) returnTarget.setAttribute("tabindex", "-1"); returnTarget?.focus?.(); this.hideOverlay("feedback-overlay"); },
   openTerminal(won, result, answer) { this.lastFocusedElement = document.activeElement; document.getElementById("modal-eyebrow").textContent = won ? "BUILDING 13 // CLEAR" : "BUILDING 13 // FAILURE REPORT"; document.getElementById("modal-headline").textContent = won ? "ASCENT COMPLETE" : "CABLES SNAPPED"; document.getElementById("modal-summary").textContent = won ? "You reached the thirteenth floor and took the elevator beyond superstition." : `The elevator stopped on floor ${result.floorReached}. The answer code was ${answer}.`; document.getElementById("result-stats").innerHTML = `<span><b>${result.floorReached}</b><small>FLOOR REACHED</small></span><span><b>${result.guessesUsed}</b><small>GUESSES</small></span><span><b>${this.formatTime(result.elapsedMs)}</b><small>TIME</small></span>`; document.getElementById("terminal-light").classList.toggle("success", won); this.showOverlay("terminal-overlay"); document.getElementById("modal-action-btn").focus(); },
   closeTerminal() { this.hideOverlay("terminal-overlay"); },
   shareResult() { const result = Floor13Storage.getResults()[0]; const text = result ? `TRISKAIDEKAPHOBIA // ${result.outcome === "COMPLETE" ? "13 FLOORS" : `FLOOR ${result.floorReached}`} // ${result.guessesUsed} guesses // ${this.formatTime(result.elapsedMs)} // seed ${result.seed}` : "TRISKAIDEKAPHOBIA // FLOOR 13"; const copy = navigator.clipboard?.writeText(text); copy?.then(() => this.setStatus("RESULT COPIED TO CLIPBOARD")).catch(() => this.setStatus(text)); if (!copy) this.setStatus(text); },
@@ -213,10 +229,10 @@ const Floor13UI = {
   showLobbyStatus(message, error = false) { const element = document.getElementById("lobby-status"); element.textContent = message; element.classList.toggle("error", error); },
   showOverlay(id) { const overlay = document.getElementById(id); overlay.classList.remove("overlay-hidden"); overlay.classList.add("overlay-visible"); overlay.setAttribute("aria-hidden", "false"); },
   hideOverlay(id) { const overlay = document.getElementById(id); overlay.classList.add("overlay-hidden"); overlay.classList.remove("overlay-visible"); overlay.setAttribute("aria-hidden", "true"); },
-  closeTopOverlay() { ["feedback-overlay", "terminal-overlay", "handoff-overlay", "stats-overlay"].some(id => { if (document.getElementById(id).classList.contains("overlay-visible")) { this.hideOverlay(id); return true; } return false; }); },
+  closeTopOverlay() { ["feedback-overlay", "terminal-overlay", "handoff-overlay", "stats-overlay"].some(id => { if (document.getElementById(id).classList.contains("overlay-visible")) { if (id === "feedback-overlay") this.closeFeedback(); else this.hideOverlay(id); return true; } return false; }); },
   closeAllOverlays() { ["feedback-overlay", "terminal-overlay", "handoff-overlay", "stats-overlay"].forEach(id => this.hideOverlay(id)); }
 };
 
-window.render_game_to_text = () => JSON.stringify({ screen: document.getElementById("game-screen").hidden ? "lobby" : "game", mode: Floor13Engine.run?.mode || "LOBBY", seed: Floor13Engine.run?.seed || null, player: Floor13Engine.run?.handle || null, floor: Floor13Engine.run?.floor || 0, attempt: Floor13Engine.run?.attempts || 0, currentGuess: Floor13Engine.currentGuess.join(""), lifelines: Floor13Engine.run?.lifelines || {}, timer: Floor13Engine.run?.elapsedMs || 0, invalidEntry: !document.getElementById("invalid-entry")?.hidden, status: document.getElementById("status-live")?.textContent || "" });
+window.render_game_to_text = () => { const floorLogVisible = document.getElementById("feedback-overlay")?.classList.contains("overlay-visible"); return JSON.stringify({ screen: document.getElementById("game-screen").hidden ? "lobby" : "game", mode: Floor13Engine.run?.mode || "LOBBY", seed: Floor13Engine.run?.seed || null, player: Floor13Engine.run?.handle || null, floor: Floor13Engine.run?.floor || 0, attempt: Floor13Engine.run?.attempts || 0, currentGuess: Floor13Engine.currentGuess.join(""), lifelines: Floor13Engine.run?.lifelines || {}, timer: Floor13Engine.run?.elapsedMs || 0, invalidEntry: !document.getElementById("invalid-entry")?.hidden, floorLogVisible, floorLog: floorLogVisible ? { pos: Floor13Engine.targetWordMetadata.pos, hint: Floor13Engine.targetWordMetadata.hint } : null, status: document.getElementById("status-live")?.textContent || "" }); };
 window.advanceTime = ms => { if (Floor13Engine.run?.result === "IN_PROGRESS") { Floor13Engine.run.elapsedMs += ms; Floor13Engine.run.startedAt -= ms; Floor13UI.updateHeader(); } };
 window.onload = () => { document.getElementById("player-handle").value = Floor13Storage.read(STORAGE_KEYS.handle, "Operator"); Floor13Engine.boot().then(() => { const params = new URLSearchParams(window.location.search); if (params.get("seed")) Floor13Engine.startRun(params.get("mode") === "challenge" ? "CHALLENGE" : "DAILY", Number(params.get("seed")) || Floor13Engine.dailySeed()); }); };
