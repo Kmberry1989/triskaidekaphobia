@@ -299,16 +299,25 @@ const Floor13Engine = {
   mode: "DAILY", seed: 0, dictionary: {}, acceptedWords: new Set(), wordsByLength: {}, targetWordsByLength: {}, targetMetadataByWord: {}, run: null, targetWord: "", targetWordMetadata: {}, currentGuess: [], shatteredKeys: new Set(), transitionTimer: null, timerHandle: null, transitioning: false, transitionStage: "idle", transitionTargetFloor: 0, transitionFromFloor: 0, pendingTransitionRun: null,
   async boot() {
     try {
-      const [dictionaryResponse, acceptedResponse] = await Promise.all([fetch("assets/data/dictionary.json"), fetch("assets/data/accepted-words.json")]);
+      const [dictionaryResponse, acceptedResponse, curatedResponse] = await Promise.all([fetch("assets/data/dictionary.json"), fetch("assets/data/accepted-words.json"), fetch("assets/data/curated-answers.json")]);
       this.dictionary = await dictionaryResponse.json();
       this.acceptedWords = new Set((await acceptedResponse.json()).map(word => word.toUpperCase()));
+      const curatedAnswers = await curatedResponse.json();
       const puzzleFloors = FLOORS.slice(1);
       const targetEntries = puzzleFloors.flatMap(floor => {
-        const entries = this.dictionary[`${floor}_letters`];
-        if (!Array.isArray(entries)) throw new Error(`Missing curated target list for floor ${floor}.`);
-        return entries.map(entry => {
+        const key = `${floor}_letters`;
+        const entries = this.dictionary[key];
+        const catalog = curatedAnswers[key];
+        if (!Array.isArray(entries) || !Array.isArray(catalog)) throw new Error(`Missing curated target list for floor ${floor}.`);
+        const metadataByWord = Object.fromEntries(entries.map(entry => {
           if (!entry || typeof entry.word !== "string" || entry.word.length !== floor || typeof entry.pos !== "string" || typeof entry.hint !== "string" || !entry.hint.trim()) throw new Error(`Invalid curated target metadata for floor ${floor}.`);
-          return { ...entry, word: entry.word.toUpperCase() };
+          return [entry.word.toUpperCase(), { ...entry, word: entry.word.toUpperCase() }];
+        }));
+        if (!catalog.length) throw new Error(`No curated answers are available for floor ${floor}.`);
+        return catalog.map(word => {
+          const normalized = typeof word === "string" ? word.toUpperCase() : "";
+          if (normalized.length !== floor || !/^[A-Z]+$/.test(normalized) || !this.acceptedWords.has(normalized)) throw new Error(`Invalid curated answer ${word} for floor ${floor}.`);
+          return metadataByWord[normalized] || { word: normalized, pos: "Noun", hint: `A common ${floor}-letter answer selected for this stage.` };
         });
       });
       this.targetMetadataByWord = Object.fromEntries(targetEntries.map(entry => [entry.word, entry]));
