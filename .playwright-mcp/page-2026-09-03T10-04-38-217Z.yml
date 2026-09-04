@@ -1,0 +1,85 @@
+- generic [ref=e1]:
+  - region [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: BUILDING 13
+      - generic [ref=e7]: LOCAL ONLY
+    - generic [ref=e8]:
+      - paragraph [ref=e9]: THE ELEVATOR IS WAITING
+      - heading "TRISKAIDEKAPHOBIA" [level=1] [ref=e10]
+      - paragraph [ref=e11]: Board on floor one. Face a two-letter code on floor two, then climb one letter at a time until floor thirteen.
+    - generic [ref=e12]:
+      - generic [ref=e13]: CALL SIGN
+      - textbox "CALL SIGN" [ref=e14]: Operator
+      - generic [ref=e15]:
+        - button "TODAY'S RUN DAILY ASCENT Same seed for everyone." [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: TODAY'S RUN
+          - strong [ref=e18]: DAILY ASCENT
+          - generic [ref=e19]: Same seed for everyone.
+        - button "SEND A CABLE CREATE CHALLENGE Make a replayable seed link." [ref=e20] [cursor=pointer]:
+          - generic [ref=e21]: SEND A CABLE
+          - strong [ref=e22]: CREATE CHALLENGE
+          - generic [ref=e23]: Make a replayable seed link.
+        - button "TWO OPERATORS PASS & PLAY Share one device, floor by floor." [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: TWO OPERATORS
+          - strong [ref=e26]: PASS & PLAY
+          - generic [ref=e27]: Share one device, floor by floor.
+        - button "PRIVATE LINK ONLINE ROOM Climb together with chat." [active] [ref=e28] [cursor=pointer]:
+          - generic [ref=e29]: PRIVATE LINK
+          - strong [ref=e30]: ONLINE ROOM
+          - generic [ref=e31]: Climb together with chat.
+      - generic [ref=e32]:
+        - button "↻ RESUME RUN" [ref=e33] [cursor=pointer]
+        - button "▦ STATS / HISTORY" [ref=e34] [cursor=pointer]
+        - button "SOUND ON" [pressed] [ref=e35] [cursor=pointer]
+    - status [ref=e36]
+  - dialog [ref=e38]:
+    - button "Close online room" [ref=e39] [cursor=pointer]: ×
+    - paragraph [ref=e40]: BUILDING 13 // PRIVATE CHANNEL
+    - heading "ONLINE ROOM" [level=2] [ref=e41]
+    - generic [ref=e42]:
+      - paragraph [ref=e43]: Open a private ascent for two operators.
+      - status [ref=e44]: Online rooms are offline until Firebase is configured.
+      - generic [ref=e45]:
+        - button "CREATE ROOM" [ref=e46] [cursor=pointer]
+        - text: JOIN CODE
+        - textbox "JOIN CODE" [ref=e47]:
+          - /placeholder: ABC123
+        - button "JOIN ROOM" [ref=e48] [cursor=pointer]
+  - generic [aria-hidden]:
+    - dialog:
+      - button: ×
+      - paragraph: FLOOR LOG // CLASSIFIED
+      - heading [level=2]: FIELD NOTE
+      - button: BACK TO BOARD
+  - generic [aria-hidden]:
+    - dialog:
+      - paragraph: ELEVATOR STATUS
+      - heading [level=2]: CABLES SNAPPED
+      - generic:
+        - button: BOARD AGAIN
+        - button: COPY RESULT
+        - button: RETURN TO LOBBY
+  - generic [aria-hidden]:
+    - dialog:
+      - paragraph: PASS THE DEVICE
+      - heading [level=2]: NEXT OPERATOR
+      - paragraph: Hand the device to the next operator when the elevator doors open.
+      - button: I HAVE THE DEVICE
+  - generic [aria-hidden]:
+    - dialog:
+      - button: ×
+      - paragraph: BLACK BOX // RUN HISTORY
+      - heading [level=2]: OPERATOR LOG
+      - generic:
+        - generic:
+          - generic: "0"
+          - generic: RUNS
+        - generic:
+          - generic: "0"
+          - generic: CLEARS
+        - generic:
+          - generic: "0"
+          - generic: BEST FLOOR
+      - generic:
+        - paragraph: No completed runs yet. The building is waiting.
+      - button: CLOSE LOG

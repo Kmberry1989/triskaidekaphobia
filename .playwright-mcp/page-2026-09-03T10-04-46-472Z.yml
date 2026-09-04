@@ -1,0 +1,121 @@
+- generic [active] [ref=e1]:
+  - region [ref=e49]:
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - paragraph [ref=e53]: ELEVATOR SHAFT DAILY
+          - heading "TRISKAIDEKAPHOBIA" [level=1] [ref=e54]
+        - generic [ref=e55]:
+          - button "Open stats and history" [ref=e56] [cursor=pointer]: ▦
+          - button "Return to lobby" [ref=e57] [cursor=pointer]: ×
+      - generic [ref=e58]:
+        - generic [ref=e59]: FLOOR 01 / 13
+        - generic [ref=e60]: OPERATOR
+        - generic [ref=e61]: 00:01
+      - generic "Floor progress" [ref=e62]
+    - region [ref=e63]:
+      - generic [ref=e64]: FLOOR 01 // LOBBY
+      - heading "THE DOORS ARE OPEN" [level=2] [ref=e65]
+      - paragraph [ref=e66]: Step into the car. Floor 02 is waiting with a two-letter code.
+      - button "ENTER ELEVATOR" [ref=e67] [cursor=pointer]
+    - generic [ref=e68]:
+      - region "Emergency lifelines" [ref=e69]:
+        - generic [ref=e70]:
+          - generic [ref=e71]: EMERGENCY KIT
+          - generic [ref=e72]: 3 AVAILABLE
+        - generic [ref=e73]:
+          - button "Reveal one correct letter" [disabled] [ref=e74]:
+            - generic [ref=e75]: ◉
+            - generic [ref=e76]: REVEAL
+          - button "Open the floor log clue" [disabled] [ref=e77]:
+            - generic [ref=e78]: ▤
+            - generic [ref=e79]: FLOOR LOG
+          - button "Remove half of the wrong letters" [disabled] [ref=e80]:
+            - generic [ref=e81]: ⌁
+            - generic [ref=e82]: 50:50
+      - generic "On-screen keyboard" [ref=e83]:
+        - generic [ref=e84]:
+          - button "Letter Q" [ref=e85] [cursor=pointer]: Q
+          - button "Letter W" [ref=e86] [cursor=pointer]: W
+          - button "Letter E" [ref=e87] [cursor=pointer]: E
+          - button "Letter R" [ref=e88] [cursor=pointer]: R
+          - button "Letter T" [ref=e89] [cursor=pointer]: T
+          - button "Letter Y" [ref=e90] [cursor=pointer]: "Y"
+          - button "Letter U" [ref=e91] [cursor=pointer]: U
+          - button "Letter I" [ref=e92] [cursor=pointer]: I
+          - button "Letter O" [ref=e93] [cursor=pointer]: O
+          - button "Letter P" [ref=e94] [cursor=pointer]: P
+        - generic [ref=e95]:
+          - button "Letter A" [ref=e96] [cursor=pointer]: A
+          - button "Letter S" [ref=e97] [cursor=pointer]: S
+          - button "Letter D" [ref=e98] [cursor=pointer]: D
+          - button "Letter F" [ref=e99] [cursor=pointer]: F
+          - button "Letter G" [ref=e100] [cursor=pointer]: G
+          - button "Letter H" [ref=e101] [cursor=pointer]: H
+          - button "Letter J" [ref=e102] [cursor=pointer]: J
+          - button "Letter K" [ref=e103] [cursor=pointer]: K
+          - button "Letter L" [ref=e104] [cursor=pointer]: L
+        - generic [ref=e105]:
+          - button "Submit guess" [ref=e106] [cursor=pointer]: ↵
+          - button "Letter Z" [ref=e107] [cursor=pointer]: Z
+          - button "Letter X" [ref=e108] [cursor=pointer]: X
+          - button "Letter C" [ref=e109] [cursor=pointer]: C
+          - button "Letter V" [ref=e110] [cursor=pointer]: V
+          - button "Letter B" [ref=e111] [cursor=pointer]: B
+          - button "Letter N" [ref=e112] [cursor=pointer]: "N"
+          - button "Letter M" [ref=e113] [cursor=pointer]: M
+          - button "Backspace" [ref=e114] [cursor=pointer]: ⌫
+    - paragraph [ref=e115]
+    - paragraph [ref=e116]
+  - generic [aria-hidden]:
+    - dialog:
+      - button: ×
+      - paragraph: BUILDING 13 // PRIVATE CHANNEL
+      - heading [level=2]: ONLINE ROOM
+      - generic:
+        - paragraph: Open a private ascent for two operators.
+        - status: Online rooms are offline until Firebase is configured.
+        - generic:
+          - button: CREATE ROOM
+          - text: JOIN CODE
+          - textbox:
+            - /placeholder: ABC123
+          - button: JOIN ROOM
+  - generic [aria-hidden]:
+    - dialog:
+      - button: ×
+      - paragraph: FLOOR LOG // CLASSIFIED
+      - heading [level=2]: FIELD NOTE
+      - button: BACK TO BOARD
+  - generic [aria-hidden]:
+    - dialog:
+      - paragraph: ELEVATOR STATUS
+      - heading [level=2]: CABLES SNAPPED
+      - generic:
+        - button: BOARD AGAIN
+        - button: COPY RESULT
+        - button: RETURN TO LOBBY
+  - generic [aria-hidden]:
+    - dialog:
+      - paragraph: PASS THE DEVICE
+      - heading [level=2]: NEXT OPERATOR
+      - paragraph: Hand the device to the next operator when the elevator doors open.
+      - button: I HAVE THE DEVICE
+  - generic [aria-hidden]:
+    - dialog:
+      - button: ×
+      - paragraph: BLACK BOX // RUN HISTORY
+      - heading [level=2]: OPERATOR LOG
+      - generic:
+        - generic:
+          - generic: "0"
+          - generic: RUNS
+        - generic:
+          - generic: "0"
+          - generic: CLEARS
+        - generic:
+          - generic: "0"
+          - generic: BEST FLOOR
+      - generic:
+        - paragraph: No completed runs yet. The building is waiting.
+      - button: CLOSE LOG

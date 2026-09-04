@@ -1,0 +1,288 @@
+[
+  {
+    "name": "desktop",
+    "reduced": false,
+    "stages": [
+      {
+        "point": "close",
+        "transitioning": true,
+        "stage": "closing",
+        "from": 1,
+        "to": 2,
+        "floor": 1,
+        "currentGuess": "",
+        "status": "DOORS CLOSING // FLOOR 02"
+      },
+      {
+        "point": "travel",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "Z",
+        "status": "FLOOR 02 // PUZZLE READY"
+      },
+      {
+        "point": "arrival",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "Z",
+        "status": "FLOOR 02 // PUZZLE READY"
+      },
+      {
+        "point": "open",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "Z",
+        "status": "FLOOR 02 // PUZZLE READY"
+      }
+    ],
+    "afterBlockedKey": {
+      "transitioning": false,
+      "currentGuess": "Z"
+    },
+    "final": {
+      "screen": "game",
+      "mode": "DAILY",
+      "seed": 181216612,
+      "player": "Operator",
+      "floor": 2,
+      "attempt": 0,
+      "currentGuess": "Z",
+      "lifelines": {
+        "reveal": true,
+        "clue": true,
+        "fifty": true
+      },
+      "transitioning": false,
+      "transitionStage": "idle",
+      "transitionFromFloor": 0,
+      "transitionTargetFloor": 0,
+      "timer": 12002,
+      "onlineRoom": null,
+      "activePlayerId": null,
+      "chatMessageCount": 0,
+      "invalidEntry": false,
+      "floorLogVisible": false,
+      "floorLog": null,
+      "status": "FLOOR 02 // PUZZLE READY"
+    },
+    "secondTransition": {
+      "stage": "idle",
+      "from": 0,
+      "to": 0,
+      "floor": 2
+    },
+    "metrics": {
+      "width": 1280,
+      "height": 720,
+      "scrollHeight": 720,
+      "bodyScrollHeight": 720,
+      "boardWidth": 594,
+      "transitionHidden": true,
+      "busy": "false"
+    },
+    "rowFit": {
+      "rowWidth": 594,
+      "scrollWidth": 594,
+      "cells": 2
+    },
+    "errors": []
+  },
+  {
+    "name": "mobile",
+    "reduced": false,
+    "stages": [
+      {
+        "point": "close",
+        "transitioning": true,
+        "stage": "traveling",
+        "from": 1,
+        "to": 2,
+        "floor": 1,
+        "currentGuess": "",
+        "status": "DOORS CLOSING // FLOOR 02"
+      },
+      {
+        "point": "travel",
+        "transitioning": true,
+        "stage": "opening",
+        "from": 1,
+        "to": 2,
+        "floor": 2,
+        "currentGuess": "",
+        "status": "DOORS CLOSING // FLOOR 02"
+      },
+      {
+        "point": "arrival",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "",
+        "status": "FLOOR 02 // PUZZLE READY"
+      },
+      {
+        "point": "open",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "",
+        "status": "FLOOR 02 // PUZZLE READY"
+      }
+    ],
+    "afterBlockedKey": {
+      "transitioning": true,
+      "currentGuess": ""
+    },
+    "final": {
+      "screen": "game",
+      "mode": "DAILY",
+      "seed": 181216612,
+      "player": "Operator",
+      "floor": 2,
+      "attempt": 0,
+      "currentGuess": "",
+      "lifelines": {
+        "reveal": true,
+        "clue": true,
+        "fifty": true
+      },
+      "transitioning": false,
+      "transitionStage": "idle",
+      "transitionFromFloor": 0,
+      "transitionTargetFloor": 0,
+      "timer": 5001,
+      "onlineRoom": null,
+      "activePlayerId": null,
+      "chatMessageCount": 0,
+      "invalidEntry": false,
+      "floorLogVisible": false,
+      "floorLog": null,
+      "status": "FLOOR 02 // PUZZLE READY"
+    },
+    "secondTransition": {
+      "stage": "traveling",
+      "from": 2,
+      "to": 3,
+      "floor": 2
+    },
+    "metrics": {
+      "width": 390,
+      "height": 844,
+      "scrollHeight": 844,
+      "bodyScrollHeight": 844,
+      "boardWidth": 368,
+      "transitionHidden": true,
+      "busy": "false"
+    },
+    "rowFit": {
+      "rowWidth": 368,
+      "scrollWidth": 368,
+      "cells": 2
+    },
+    "errors": []
+  },
+  {
+    "name": "reduced",
+    "reduced": true,
+    "stages": [
+      {
+        "point": "close",
+        "transitioning": true,
+        "stage": "closing",
+        "from": 1,
+        "to": 2,
+        "floor": 1,
+        "currentGuess": "",
+        "status": "DOORS CLOSING // FLOOR 02"
+      },
+      {
+        "point": "travel",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "Z",
+        "status": "FLOOR 02 // PUZZLE READY"
+      },
+      {
+        "point": "arrival",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "Z",
+        "status": "FLOOR 02 // PUZZLE READY"
+      },
+      {
+        "point": "open",
+        "transitioning": false,
+        "stage": "idle",
+        "from": 0,
+        "to": 0,
+        "floor": 2,
+        "currentGuess": "Z",
+        "status": "FLOOR 02 // PUZZLE READY"
+      }
+    ],
+    "afterBlockedKey": {
+      "transitioning": false,
+      "currentGuess": "Z"
+    },
+    "final": {
+      "screen": "game",
+      "mode": "DAILY",
+      "seed": 181216612,
+      "player": "Operator",
+      "floor": 2,
+      "attempt": 0,
+      "currentGuess": "Z",
+      "lifelines": {
+        "reveal": true,
+        "clue": true,
+        "fifty": true
+      },
+      "transitioning": false,
+      "transitionStage": "idle",
+      "transitionFromFloor": 0,
+      "transitionTargetFloor": 0,
+      "timer": 4002,
+      "onlineRoom": null,
+      "activePlayerId": null,
+      "chatMessageCount": 0,
+      "invalidEntry": false,
+      "floorLogVisible": false,
+      "floorLog": null,
+      "status": "FLOOR 02 // PUZZLE READY"
+    },
+    "secondTransition": null,
+    "metrics": {
+      "width": 390,
+      "height": 844,
+      "scrollHeight": 844,
+      "bodyScrollHeight": 844,
+      "boardWidth": 368,
+      "transitionHidden": true,
+      "busy": "false"
+    },
+    "rowFit": {
+      "rowWidth": 368,
+      "scrollWidth": 368,
+      "cells": 2
+    },
+    "errors": []
+  }
+]

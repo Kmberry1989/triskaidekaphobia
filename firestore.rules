@@ -1,0 +1,183 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function session(roomId) {
+      return get(/databases/$(database)/documents/sessions/$(roomId));
+    }
+
+    function isMember(roomId) {
+      return signedIn() && request.auth.uid in session(roomId).data.playerIds;
+    }
+
+    function isActivePlayer(roomId) {
+      return isMember(roomId) && session(roomId).data.activePlayerId == request.auth.uid;
+    }
+
+    function isHost(roomId) {
+      return isMember(roomId) && session(roomId).data.players[request.auth.uid].role == 'host';
+    }
+
+    match /sessions/{roomId} {
+      allow create: if signedIn()
+        && request.resource.data.roomId == roomId
+        && request.resource.data.playerIds.size() == 1
+        && request.resource.data.playerIds[0] == request.auth.uid
+        && request.resource.data.players[request.auth.uid].role == 'host'
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time;
+
+      // A prospective guest must be able to read an open one-player room
+      // before the join transaction can add them as a member.
+      allow read: if isMember(roomId)
+        || (signedIn()
+          && resource.data.status == 'WAITING'
+          && resource.data.playerIds.size() == 1
+          && resource.data.expiresAt > request.time);
+
+      allow update: if signedIn() && (
+        (
+          isHost(roomId)
+          && resource.data.status == 'WAITING'
+          && resource.data.playerIds.size() == 2
+          && request.resource.data.status == 'IN_PROGRESS'
+          && request.resource.data.playerIds == resource.data.playerIds
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'startedAt', 'version', 'updatedAt'])
+          && request.resource.data.version == resource.data.version + 1
+        )
+        || (
+          resource.data.status == 'WAITING'
+          && !(request.auth.uid in resource.data.playerIds)
+          && request.auth.uid in request.resource.data.playerIds
+          && request.resource.data.playerIds.size() == 2
+          && resource.data.expiresAt > request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'playerIds', 'updatedAt'])
+          && request.resource.data.players[request.auth.uid].id == request.auth.uid
+          && request.resource.data.players[request.auth.uid].role == 'guest'
+        )
+        || (
+          isActivePlayer(roomId)
+          && resource.data.status == 'IN_PROGRESS'
+          && resource.data.result == 'IN_PROGRESS'
+          && request.resource.data.playerIds == resource.data.playerIds
+          && request.resource.data.seed == resource.data.seed
+          && request.resource.data.version == resource.data.version + 1
+          && (
+            (
+              resource.data.floor == 1
+              && request.resource.data.floor == 2
+              && request.resource.data.attempts == 0
+              && request.resource.data.guesses == resource.data.guesses
+              && request.resource.data.lifelines == resource.data.lifelines
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['floor', 'attempts', 'version', 'updatedAt'])
+            )
+            || (
+              resource.data.floor >= 2
+              && request.resource.data.floor == resource.data.floor
+              && request.resource.data.attempts == resource.data.attempts
+              && request.resource.data.guesses == resource.data.guesses
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lifelines', 'version', 'updatedAt'])
+              && (
+                (resource.data.lifelines.reveal == true && request.resource.data.lifelines.reveal == false && request.resource.data.lifelines.clue == resource.data.lifelines.clue && request.resource.data.lifelines.fifty == resource.data.lifelines.fifty)
+                || (resource.data.lifelines.clue == true && request.resource.data.lifelines.clue == false && request.resource.data.lifelines.reveal == resource.data.lifelines.reveal && request.resource.data.lifelines.fifty == resource.data.lifelines.fifty)
+                || (resource.data.lifelines.fifty == true && request.resource.data.lifelines.fifty == false && request.resource.data.lifelines.reveal == resource.data.lifelines.reveal && request.resource.data.lifelines.clue == resource.data.lifelines.clue)
+              )
+            )
+            || (
+              resource.data.floor >= 2
+              && request.resource.data.guesses.size() == resource.data.guesses.size() + 1
+              && request.resource.data.guesses[resource.data.guesses.size()].floor == resource.data.floor
+              && request.resource.data.guesses[resource.data.guesses.size()].row == resource.data.attempts
+              && request.resource.data.guesses[resource.data.guesses.size()].word is string
+              && request.resource.data.guesses[resource.data.guesses.size()].word.size() == resource.data.floor
+              && request.resource.data.guesses[resource.data.guesses.size()].word.matches('^[A-Z]+$')
+              && request.resource.data.guesses[resource.data.guesses.size()].evaluation is list
+              && request.resource.data.guesses[resource.data.guesses.size()].evaluation.size() == resource.data.floor
+              && request.resource.data.lifelines == resource.data.lifelines
+              && (
+                (
+                  request.resource.data.floor == resource.data.floor + 1
+                  && request.resource.data.attempts == 0
+                  && request.resource.data.result == 'IN_PROGRESS'
+                  && request.resource.data.solvedFloors.size() == resource.data.solvedFloors.size() + 1
+                  && request.resource.data.activePlayerIndex != resource.data.activePlayerIndex
+                  && request.resource.data.activePlayerId != resource.data.activePlayerId
+                  && request.resource.data.activePlayerId == request.resource.data.playerIds[request.resource.data.activePlayerIndex]
+                )
+                || (
+                  request.resource.data.floor == resource.data.floor
+                  && request.resource.data.solvedFloors == resource.data.solvedFloors
+                  && request.resource.data.activePlayerId == resource.data.activePlayerId
+                  && ((request.resource.data.attempts == resource.data.attempts + 1 && request.resource.data.attempts < 6 && request.resource.data.result == 'IN_PROGRESS') || (request.resource.data.attempts == 6 && request.resource.data.result == 'FAILED'))
+                )
+                || (
+                  resource.data.floor == 13
+                  && request.resource.data.floor == 13
+                  && request.resource.data.attempts == 0
+                  && request.resource.data.result == 'COMPLETE'
+                  && request.resource.data.solvedFloors.size() == resource.data.solvedFloors.size() + 1
+                  && request.resource.data.activePlayerId == resource.data.activePlayerId
+                )
+              )
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guesses', 'attempts', 'floor', 'solvedFloors', 'activePlayerIndex', 'activePlayerId', 'result', 'elapsedMs', 'version', 'updatedAt'])
+            )
+          )
+        )
+        || (
+          isMember(roomId)
+          && !(request.auth.uid in request.resource.data.playerIds)
+          && request.resource.data.playerIds.size() == resource.data.playerIds.size() - 1
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'playerIds', 'activePlayerId', 'activePlayerIndex', 'updatedAt'])
+          && (
+            (resource.data.activePlayerId == request.auth.uid && request.resource.data.activePlayerId == request.resource.data.playerIds[0] && request.resource.data.activePlayerIndex == 0)
+            || (resource.data.activePlayerId != request.auth.uid && request.resource.data.activePlayerId == resource.data.activePlayerId && request.resource.data.activePlayerIndex == resource.data.activePlayerIndex)
+          )
+        )
+      );
+
+      allow delete: if isMember(roomId);
+
+      match /messages/{messageId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId)
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderName is string
+          && request.resource.data.body is string
+          && request.resource.data.body.size() > 0
+          && request.resource.data.body.size() <= 280;
+      }
+
+      match /voiceSignals/{signalId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId)
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.to in session(roomId).data.playerIds
+          && request.resource.data.type in ['offer', 'answer', 'candidate'];
+      }
+
+      match /presence/{playerId} {
+        allow read: if isMember(roomId);
+        allow create, update: if isMember(roomId)
+          && playerId == request.auth.uid
+          && request.resource.data.id == request.auth.uid;
+        allow delete: if signedIn() && playerId == request.auth.uid;
+      }
+    }
+
+    match /results/{resultId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.playerHandle is string
+        && request.resource.data.outcome in ['COMPLETE', 'FAILED'];
+    }
+
+    match /challenges/{challengeId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+    }
+  }
+}
