@@ -231,6 +231,9 @@ const Floor13Voice = {
 const Floor13Audio = {
   enabled: Floor13Storage.read(STORAGE_KEYS.settings, { enabled: true }).enabled !== false,
   volume: 0.035,
+  musicVolume: 0.24,
+  musicSource: "assets/audio/Relay Shaft Ritual.ogg",
+  music: null,
   preloaded: false,
   activeClips: new Set(),
   clipSources: {
@@ -253,9 +256,23 @@ const Floor13Audio = {
     correct: "assets/audio/correct.ogg"
   },
   unlock() {
-    if (!this.enabled || this.preloaded) return;
-    this.preloaded = true;
-    Object.values(this.clipSources).forEach(source => { if (!source) return; const clip = new Audio(source); clip.preload = "auto"; clip.load(); });
+    if (!this.enabled) return;
+    if (!this.preloaded) {
+      this.preloaded = true;
+      Object.values(this.clipSources).forEach(source => { if (!source) return; const clip = new Audio(source); clip.preload = "auto"; clip.load(); });
+    }
+    this.startMusic();
+  },
+  startMusic() {
+    if (!this.enabled || !this.musicSource) return;
+    if (!this.music) this.music = Object.assign(new Audio(this.musicSource), { loop: true, preload: "auto", playsInline: true, volume: this.musicVolume });
+    if (!this.music.paused) return;
+    void this.music.play().catch(() => {});
+  },
+  stopMusic() {
+    if (!this.music) return;
+    this.music.pause();
+    this.music.currentTime = 0;
   },
   playSequence(sequence) {
     sequence.forEach(({ name, delay = 0 }) => {
@@ -274,8 +291,8 @@ const Floor13Audio = {
     clip.addEventListener("error", release, { once: true });
     void clip.play().catch(release);
   },
-  stopAll() { this.activeClips.forEach(clip => { clip.pause(); clip.currentTime = 0; }); this.activeClips.clear(); },
-  toggle() { this.enabled = !this.enabled; Floor13Storage.write(STORAGE_KEYS.settings, { enabled: this.enabled }); if (this.enabled) this.play("tap"); else this.stopAll(); Floor13UI.updateAudioButton(); }
+  stopAll() { this.activeClips.forEach(clip => { clip.pause(); clip.currentTime = 0; }); this.activeClips.clear(); this.stopMusic(); },
+  toggle() { this.enabled = !this.enabled; Floor13Storage.write(STORAGE_KEYS.settings, { enabled: this.enabled }); if (this.enabled) { this.unlock(); this.play("tap"); } else this.stopAll(); Floor13UI.updateAudioButton(); }
 };
 
 const Floor13Engine = {
