@@ -1,6 +1,13 @@
 const FLOORS = Array.from({ length: 13 }, (_, index) => index + 1);
 const MAX_ATTEMPTS = 6;
 const FLOOR_TRANSITION_DURATIONS = { closing: 480, traveling: 1100, arrival: 660, opening: 640 };
+const SUSPENSE_DURATIONS = { regular: 620, late: 980, final: 1380, story: 1700, finale: 1900 };
+const LATE_FLOOR_STORIES = {
+  10: { label: "THE SHAFT REMEMBERS", copy: "The indicator pauses between floors. Something below has learned your call sign." },
+  11: { label: "UNLISTED STOP", copy: "A second bell sounds behind the walls. The panel insists there are only thirteen floors." },
+  12: { label: "LAST SERVICE", copy: "The car rises past the maintenance line. The lights stay on because someone is still watching." },
+  13: { label: "THE TOP FLOOR", copy: "The final display burns through the dark. The building has been waiting for this answer." }
+};
 const STORAGE_KEYS = { active: "floor13.activeRun", results: "floor13.results", settings: "floor13.settings", handle: "floor13.handle", challenges: "floor13.challenges", room: "floor13.room" };
 const CHAT_MAX_LENGTH = 280;
 const ROOM_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -49,7 +56,7 @@ const Floor13Remote = {
     if (!this.isReady()) throw new Error("Online rooms are unavailable until Firebase is configured.");
     const roomId = this.makeRoomId();
     const player = { id: this.uid, name: displayName, role: "host", joinedAt: new Date().toISOString() };
-    await this.modules.setDoc(this.sessionRef(roomId), { roomId, seed: Floor13Engine.freshSeed("online-room"), mode: "ONLINE", status: "WAITING", players: { [this.uid]: player }, playerIds: [this.uid], activePlayerId: this.uid, activePlayerIndex: 0, floor: 1, attempts: 0, guesses: [], solvedFloors: [], lifelines: { reveal: true, clue: true, fifty: true }, result: "IN_PROGRESS", elapsedMs: 0, startedAt: Date.now(), version: 0, expiresAt: new Date(Date.now() + ROOM_EXPIRY_MS), createdAt: this.modules.serverTimestamp(), updatedAt: this.modules.serverTimestamp() });
+    await this.modules.setDoc(this.sessionRef(roomId), { roomId, seed: Floor13Engine.freshSeed("online-room"), mode: "ONLINE", status: "WAITING", players: { [this.uid]: player }, playerIds: [this.uid], activePlayerId: this.uid, activePlayerIndex: 0, floor: 1, attempts: 0, bonusAttempts: 0, guesses: [], solvedFloors: [], lifelines: { reveal: true, reroute: true, fifty: true }, result: "IN_PROGRESS", elapsedMs: 0, startedAt: Date.now(), version: 0, expiresAt: new Date(Date.now() + ROOM_EXPIRY_MS), createdAt: this.modules.serverTimestamp(), updatedAt: this.modules.serverTimestamp() });
     await this.attachRoom(roomId);
     return roomId;
   },
@@ -128,10 +135,11 @@ const Floor13Remote = {
       const reference = this.sessionRef(); const snapshot = await transaction.get(reference); if (!snapshot.exists()) throw new Error("Room no longer exists.");
       const session = snapshot.data(); if (session.status !== "IN_PROGRESS" || session.result !== "IN_PROGRESS") throw new Error("This ascent is no longer active."); if (session.activePlayerId !== this.uid) throw new Error("Wait for the other operator's turn."); if (session.version !== payload.expectedVersion || session.floor !== payload.floor || session.attempts !== payload.attempts) throw new Error("The room changed. Reconnecting to the latest floor.");
       const guesses = [...(session.guesses || []), payload.guessRecord]; const nextAttempts = session.attempts + 1; const update = { guesses, elapsedMs: Floor13Engine.run?.elapsedMs || session.elapsedMs || 0, version: session.version + 1, updatedAt: this.modules.serverTimestamp() };
+      const attemptLimit = MAX_ATTEMPTS + (session.bonusAttempts || 0);
       if (payload.correct) {
         const nextFloor = session.floor === 13 ? 13 : session.floor + 1; const nextPlayerIndex = session.floor === 13 ? session.activePlayerIndex : (session.activePlayerIndex + 1) % session.playerIds.length;
-        Object.assign(update, { floor: nextFloor, attempts: 0, solvedFloors: [...(session.solvedFloors || []), session.floor], activePlayerIndex: nextPlayerIndex, activePlayerId: session.playerIds[nextPlayerIndex], result: session.floor === 13 ? "COMPLETE" : "IN_PROGRESS" });
-      } else if (nextAttempts >= MAX_ATTEMPTS) Object.assign(update, { attempts: nextAttempts, result: "FAILED" });
+        Object.assign(update, { floor: nextFloor, attempts: 0, bonusAttempts: 0, solvedFloors: [...(session.solvedFloors || []), session.floor], activePlayerIndex: nextPlayerIndex, activePlayerId: session.playerIds[nextPlayerIndex], result: session.floor === 13 ? "COMPLETE" : "IN_PROGRESS" });
+      } else if (nextAttempts >= attemptLimit) Object.assign(update, { attempts: nextAttempts, bonusAttempts: 0, result: "FAILED" });
       else update.attempts = nextAttempts;
       transaction.update(reference, update);
     });
@@ -140,7 +148,9 @@ const Floor13Remote = {
     await this.modules.runTransaction(this.db, async transaction => {
       const reference = this.sessionRef(); const snapshot = await transaction.get(reference); if (!snapshot.exists()) throw new Error("Room no longer exists.");
       const session = snapshot.data(); if (session.activePlayerId !== this.uid || session.version !== expectedVersion || !session.lifelines?.[name]) throw new Error("That lifeline is no longer available.");
-      transaction.update(reference, { [`lifelines.${name}`]: false, version: session.version + 1, updatedAt: this.modules.serverTimestamp() });
+      const update = { [`lifelines.${name}`]: false, version: session.version + 1, updatedAt: this.modules.serverTimestamp() };
+      if (name === "reroute") update.bonusAttempts = 1;
+      transaction.update(reference, update);
     });
   },
   async sendChat(body) {
@@ -232,8 +242,12 @@ const Floor13Audio = {
   enabled: Floor13Storage.read(STORAGE_KEYS.settings, { enabled: true }).enabled !== false,
   volume: 0.035,
   musicVolume: 0.24,
+  ambientVolume: 0.08,
   musicSource: "assets/audio/Relay Shaft Ritual.ogg",
+  ambientSource: "assets/audio/mainloop-tri.ogg",
   music: null,
+  ambient: null,
+  duckTimer: null,
   preloaded: false,
   activeClips: new Set(),
   clipSources: {
@@ -244,11 +258,17 @@ const Floor13Audio = {
     ascent: "assets/audio/elevator-up.ogg",
     step: "assets/audio/step-inside.ogg",
     arrival: "assets/audio/floor-arrival.ogg",
+    ambient: "assets/audio/mainloop-tri.ogg",
+    floorTick: "assets/audio/letter-input.ogg",
+    suspenseRise: "assets/audio/elevator-up.ogg",
+    suspenseHold: "assets/audio/mainloop-tri.ogg",
+    brake: "assets/audio/floor-arrival.ogg",
+    cinematic: "assets/audio/correct.ogg",
     tap: "assets/audio/letter-input.ogg",
     present: "assets/audio/present-letter.ogg",
     invalid: "assets/audio/invalid-word.ogg",
     reveal: "assets/audio/reveal.ogg",
-    clue: "assets/audio/floor-log.ogg",
+    reroute: "assets/audio/fifty-fifty.ogg",
     fifty: "assets/audio/fifty-fifty.ogg",
     handoff: "assets/audio/pass-handoff.ogg",
     clear: "assets/audio/run-clear.ogg",
@@ -261,7 +281,7 @@ const Floor13Audio = {
       this.preloaded = true;
       Object.values(this.clipSources).forEach(source => { if (!source) return; const clip = new Audio(source); clip.preload = "auto"; clip.load(); });
     }
-    this.startMusic();
+    this.startMusic(); this.startAmbient();
   },
   startMusic() {
     if (!this.enabled || !this.musicSource) return;
@@ -269,10 +289,27 @@ const Floor13Audio = {
     if (!this.music.paused) return;
     void this.music.play().catch(() => {});
   },
+  startAmbient() {
+    if (!this.enabled || !this.ambientSource) return;
+    if (!this.ambient) this.ambient = Object.assign(new Audio(this.ambientSource), { loop: true, preload: "auto", playsInline: true, volume: this.ambientVolume });
+    if (!this.ambient.paused) return;
+    void this.ambient.play().catch(() => {});
+  },
   stopMusic() {
     if (!this.music) return;
     this.music.pause();
     this.music.currentTime = 0;
+  },
+  stopAmbient() {
+    if (!this.ambient) return;
+    this.ambient.pause();
+    this.ambient.currentTime = 0;
+  },
+  duckMusic(factor = 0.35, duration = 1200) {
+    clearTimeout(this.duckTimer);
+    if (this.music) this.music.volume = this.musicVolume * factor;
+    if (this.ambient) this.ambient.volume = this.ambientVolume * factor;
+    this.duckTimer = window.setTimeout(() => { if (this.music) this.music.volume = this.musicVolume; if (this.ambient) this.ambient.volume = this.ambientVolume; }, duration);
   },
   playSequence(sequence) {
     sequence.forEach(({ name, delay = 0 }) => {
@@ -291,12 +328,12 @@ const Floor13Audio = {
     clip.addEventListener("error", release, { once: true });
     void clip.play().catch(release);
   },
-  stopAll() { this.activeClips.forEach(clip => { clip.pause(); clip.currentTime = 0; }); this.activeClips.clear(); this.stopMusic(); },
+  stopAll() { this.activeClips.forEach(clip => { clip.pause(); clip.currentTime = 0; }); this.activeClips.clear(); clearTimeout(this.duckTimer); this.duckTimer = null; this.stopMusic(); this.stopAmbient(); },
   toggle() { this.enabled = !this.enabled; Floor13Storage.write(STORAGE_KEYS.settings, { enabled: this.enabled }); if (this.enabled) { this.unlock(); this.play("tap"); } else this.stopAll(); Floor13UI.updateAudioButton(); }
 };
 
 const Floor13Engine = {
-  mode: "DAILY", seed: 0, dictionary: {}, acceptedWords: new Set(), wordsByLength: {}, targetWordsByLength: {}, targetMetadataByWord: {}, run: null, targetWord: "", targetWordMetadata: {}, currentGuess: [], shatteredKeys: new Set(), transitionTimer: null, timerHandle: null, transitioning: false, transitionStage: "idle", transitionTargetFloor: 0, transitionFromFloor: 0, pendingTransitionRun: null,
+  mode: "DAILY", seed: 0, dictionary: {}, acceptedWords: new Set(), wordsByLength: {}, targetWordsByLength: {}, targetMetadataByWord: {}, run: null, targetWord: "", targetWordMetadata: {}, currentGuess: [], shatteredKeys: new Set(), transitionTimer: null, timerHandle: null, transitioning: false, transitionStage: "idle", transitionTargetFloor: 0, transitionFromFloor: 0, pendingTransitionRun: null, suspenseActive: false, storyActive: false, finaleActive: false, cinematicStage: "idle", timePaused: false, suspenseCallback: null, finaleResult: null,
   async boot() {
     try {
       const [dictionaryResponse, acceptedResponse, curatedResponse] = await Promise.all([fetch("assets/data/dictionary.json"), fetch("assets/data/accepted-words.json"), fetch("assets/data/curated-answers.json")]);
@@ -334,7 +371,8 @@ const Floor13Engine = {
   startChallenge() { const seed = this.freshSeed("challenge"); this.startRun("CHALLENGE", seed); Floor13UI.copyChallengeLink(seed); },
   startPassPlay() { this.startRun("PASS_PLAY", this.freshSeed("pass-play"), [Floor13UI.handle(), "Guest 2"]); },
   startOnlineRun(session) { this.mode = "ONLINE"; this.seed = session.seed; this.run = this.sessionToRun(session); this.showGame(); this.loadFloor(); Floor13UI.closeRoom(); },
-  sessionToRun(session) { const players = (session.playerIds || []).map(id => session.players?.[id]?.name || "Operator"); const startedAt = typeof session.startedAt === "number" ? session.startedAt : session.startedAt?.toMillis?.() || Date.parse(session.startedAt) || Date.now(); return { ...session, mode: "ONLINE", players, handle: session.players?.[session.activePlayerId]?.name || players[0] || "Operator", playerId: Floor13Remote.uid, elapsedMs: session.elapsedMs || 0, startedAt }; },
+  normalizeRun(run) { if (!run) return run; const legacyLifelines = run.lifelines || {}; const lifelines = { reveal: true, reroute: legacyLifelines.reroute ?? legacyLifelines.clue ?? true, fifty: true, ...legacyLifelines }; delete lifelines.clue; return { ...run, lifelines, bonusAttempts: Number.isFinite(run.bonusAttempts) ? run.bonusAttempts : 0 }; },
+  sessionToRun(session) { const players = (session.playerIds || []).map(id => session.players?.[id]?.name || "Operator"); const startedAt = typeof session.startedAt === "number" ? session.startedAt : session.startedAt?.toMillis?.() || Date.parse(session.startedAt) || Date.now(); return this.normalizeRun({ ...session, mode: "ONLINE", players, handle: session.players?.[session.activePlayerId]?.name || players[0] || "Operator", playerId: Floor13Remote.uid, elapsedMs: session.elapsedMs || 0, startedAt }); },
   syncRemoteSession(session) {
     if (session.error) return Floor13UI.setRoomStatus(session.error, true);
     const previous = this.run; const nextRun = this.sessionToRun(session); const floorChanged = previous && previous.floor !== session.floor && session.floor > previous.floor && session.status === "IN_PROGRESS"; const shouldLoad = !previous || floorChanged || (previous.guesses || []).length !== (session.guesses || []).length || previous.status !== session.status;
@@ -354,11 +392,12 @@ const Floor13Engine = {
       Floor13UI.showLobbyStatus("That online room is unavailable. Start a local ascent instead.", true);
       return this.showLobby();
     }
-    this.run = saved; this.mode = saved.mode; this.seed = saved.seed; this.run.startedAt = Date.now() - this.run.elapsedMs; this.startClock(); this.showGame(); this.loadFloor(); Floor13UI.announce(`Resumed on floor ${this.run.floor}.`);
+    this.run = this.normalizeRun(saved); this.mode = this.run.mode; this.seed = this.run.seed; this.run.startedAt = Date.now() - this.run.elapsedMs; Floor13Storage.write(STORAGE_KEYS.active, this.run); this.startClock(); this.showGame(); this.loadFloor(); Floor13UI.announce(`Resumed on floor ${this.run.floor}.`);
   },
   startRun(mode, seed, players = [Floor13UI.handle()]) {
     Floor13Audio.unlock(); this.mode = mode; this.seed = seed;
-    this.run = { version: 2, seed, mode, players, activePlayerIndex: 0, handle: players[0], floor: 1, attempts: 0, guesses: [], solvedFloors: [], lifelines: { reveal: true, clue: true, fifty: true }, elapsedMs: 0, startedAt: Date.now(), result: "IN_PROGRESS" };
+    this.transitioning = false; this.suspenseActive = false; this.storyActive = false; this.finaleActive = false; this.cinematicStage = "idle"; this.timePaused = false; this.suspenseCallback = null; this.finaleResult = null;
+    this.run = { version: 3, seed, mode, players, activePlayerIndex: 0, handle: players[0], floor: 1, attempts: 0, bonusAttempts: 0, guesses: [], solvedFloors: [], lifelines: { reveal: true, reroute: true, fifty: true }, elapsedMs: 0, startedAt: Date.now(), result: "IN_PROGRESS" };
     Floor13Storage.write(STORAGE_KEYS.active, this.run); this.startClock(); this.showGame(); this.loadFloor();
   },
   showGame() { document.getElementById("lobby-screen").hidden = true; document.getElementById("game-screen").hidden = false; document.getElementById("game-screen").classList.toggle("online-mode", this.mode === "ONLINE"); document.getElementById("game-container").scrollTop = 0; Floor13UI.closeAllOverlays(); },
@@ -391,24 +430,31 @@ const Floor13Engine = {
     document.documentElement.style.setProperty("--grid-columns", this.run.floor); Floor13UI.renderBoard(); Floor13UI.renderKeyboard(); Floor13UI.updateHeader(); this.replayFloorGuesses(); Floor13UI.updateKeyboardStates(); Floor13Storage.write(STORAGE_KEYS.active, this.run);
   },
   replayFloorGuesses() { this.run.guesses.filter(guess => guess.floor === this.run.floor).forEach(guess => Floor13UI.paintGuess(guess.row, guess.word, guess.evaluation)); },
-  startClock() { clearInterval(this.timerHandle); this.timerHandle = setInterval(() => { if (!this.run || this.run.result !== "IN_PROGRESS") return; this.run.elapsedMs = Date.now() - this.run.startedAt; Floor13UI.updateHeader(); }, 1000); },
-  addLetter(letter) { if (this.transitioning || !this.run || this.run.result !== "IN_PROGRESS" || this.run.attempts >= MAX_ATTEMPTS || this.shatteredKeys.has(letter)) return; const slot = this.currentGuess.indexOf(""); if (slot === -1) return; this.currentGuess[slot] = letter; Floor13UI.clearInvalidEntry(); Floor13Audio.play("tap"); Floor13UI.updateCurrentGuess(); },
-  removeLetter() { if (this.transitioning) return; const slot = this.currentGuess.map((letter, index) => letter ? index : -1).filter(index => index >= 0).pop(); if (slot === undefined) return; this.currentGuess[slot] = ""; Floor13UI.clearInvalidEntry(); Floor13UI.updateCurrentGuess(); },
+  startClock() { clearInterval(this.timerHandle); this.timerHandle = setInterval(() => { if (!this.run || this.run.result !== "IN_PROGRESS" || this.timePaused) return; this.run.elapsedMs = Date.now() - this.run.startedAt; Floor13UI.updateHeader(); }, 1000); },
+  attemptLimit() { return MAX_ATTEMPTS + (this.run?.bonusAttempts || 0); },
+  isCinematicLocked() { return this.transitioning || this.suspenseActive || this.storyActive || this.finaleActive; },
+  shouldUseSuspense() { return Boolean(this.run && this.run.attempts === this.attemptLimit() - 1); },
+  addLetter(letter) { if (this.isCinematicLocked() || !this.run || this.run.result !== "IN_PROGRESS" || this.run.attempts >= this.attemptLimit() || this.shatteredKeys.has(letter)) return; const slot = this.currentGuess.indexOf(""); if (slot === -1) return; this.currentGuess[slot] = letter; Floor13UI.clearInvalidEntry(); Floor13Audio.play("tap"); Floor13UI.updateCurrentGuess(); },
+  removeLetter() { if (this.isCinematicLocked()) return; const slot = this.currentGuess.map((letter, index) => letter ? index : -1).filter(index => index >= 0).pop(); if (slot === undefined) return; this.currentGuess[slot] = ""; Floor13UI.clearInvalidEntry(); Floor13UI.updateCurrentGuess(); },
   isValidGuess(guess) { return guess.length === this.run.floor && /^[A-Z]+$/.test(guess) && this.acceptedWords.has(guess); },
   submitCurrentRow() {
-    if (this.transitioning || !this.run || this.run.result !== "IN_PROGRESS") return;
+    if (this.isCinematicLocked() || !this.run || this.run.result !== "IN_PROGRESS") return;
     if (this.mode === "ONLINE" && this.run.activePlayerId !== Floor13Remote.uid) return Floor13UI.setStatus("WAIT FOR THE ACTIVE OPERATOR");
     const guess = this.currentGuess.join("");
     if (guess.length !== this.run.floor) { Floor13UI.clearInvalidEntry(); Floor13UI.shakeActiveRow(); Floor13UI.announce(`Enter ${this.run.floor} letters before submitting.`); return; }
     if (!this.isValidGuess(guess)) { Floor13UI.showInvalidEntry(guess); Floor13Audio.play("invalid"); return; }
-    if (this.mode === "ONLINE") return this.submitOnlineGuess(guess);
+    const submit = () => this.mode === "ONLINE" ? this.submitOnlineGuess(guess) : this.commitLocalGuess(guess);
+    if (this.shouldUseSuspense()) return this.beginSuspense(submit);
+    return submit();
+  },
+  commitLocalGuess(guess) {
     Floor13UI.clearInvalidEntry();
     const evaluation = this.evaluateGuess(guess, this.targetWord); const row = this.run.attempts;
     this.run.guesses.push({ floor: this.run.floor, row, word: guess, evaluation }); this.run.attempts += 1; Floor13UI.paintGuess(row, guess, evaluation); Floor13UI.updateKeyboardStates(); this.currentGuess = Array(this.run.floor).fill(""); Floor13Storage.write(STORAGE_KEYS.active, this.run);
     if (guess === this.targetWord) { Floor13Audio.play("correct"); this.run.solvedFloors.push(this.run.floor); Floor13UI.announce(`Floor ${this.run.floor} solved. Elevator ascending.`); if (this.run.floor === 13) return this.finishRun(true); this.beginFloorTransition(this.run.floor + 1); }
-    else if (evaluation.includes("present")) { Floor13Audio.play("present"); if (this.run.attempts >= MAX_ATTEMPTS) this.finishRun(false); else { Floor13UI.setStatus(`${MAX_ATTEMPTS - this.run.attempts} ATTEMPTS REMAIN`); Floor13UI.updateHeader(); } }
-    else if (this.run.attempts >= MAX_ATTEMPTS) this.finishRun(false);
-    else { Floor13UI.setStatus(`${MAX_ATTEMPTS - this.run.attempts} ATTEMPTS REMAIN`); Floor13UI.updateHeader(); }
+    else if (evaluation.includes("present")) { Floor13Audio.play("present"); if (this.run.attempts >= this.attemptLimit()) this.finishRun(false); else { Floor13UI.setStatus(`${this.attemptLimit() - this.run.attempts} ATTEMPTS REMAIN`); Floor13UI.updateHeader(); } }
+    else if (this.run.attempts >= this.attemptLimit()) this.finishRun(false);
+    else { Floor13UI.setStatus(`${this.attemptLimit() - this.run.attempts} ATTEMPTS REMAIN`); Floor13UI.updateHeader(); }
   },
   async submitOnlineGuess(guess) {
     if (this.run.activePlayerId !== Floor13Remote.uid) return Floor13UI.setStatus("WAIT FOR THE ACTIVE OPERATOR");
@@ -416,36 +462,73 @@ const Floor13Engine = {
     Floor13UI.clearInvalidEntry(); Floor13UI.setStatus("TRANSMITTING GUESS // WAITING FOR ROOM ACK");
     try { await Floor13Remote.submitGuess({ expectedVersion: this.run.version, floor: this.run.floor, attempts: this.run.attempts, guessRecord, correct: guess === this.targetWord }); } catch (error) { Floor13UI.setStatus(error.message); }
   },
+  beginSuspense(callback) {
+    if (this.suspenseActive) return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const floor = this.run.floor;
+    const duration = reducedMotion ? 0 : floor === 13 ? SUSPENSE_DURATIONS.final : floor >= 10 ? SUSPENSE_DURATIONS.late : SUSPENSE_DURATIONS.regular;
+    this.suspenseActive = true; this.cinematicStage = "suspense"; this.timePaused = true; this.suspenseCallback = callback;
+    document.getElementById("game-screen").classList.add("suspense-active");
+    Floor13Audio.duckMusic(floor >= 10 ? 0.18 : 0.3, duration + 400); Floor13Audio.play("suspenseRise");
+    if (floor >= 10) Floor13Audio.play("suspenseHold");
+    Floor13UI.startFloorTransition(floor, floor, "suspense");
+    Floor13UI.setStatus(`FINAL ATTEMPT // FLOOR ${String(floor).padStart(2, "0")}`, "HOLD STEADY");
+    clearTimeout(this.transitionTimer); this.transitionTimer = window.setTimeout(() => this.finishSuspense(), duration);
+  },
+  finishSuspense() {
+    clearTimeout(this.transitionTimer); this.transitionTimer = null;
+    const callback = this.suspenseCallback; this.suspenseCallback = null; this.suspenseActive = false; this.cinematicStage = "idle";
+    document.getElementById("game-screen").classList.remove("suspense-active"); Floor13UI.finishFloorTransition();
+    if (!this.transitioning && !this.storyActive && !this.finaleActive) this.timePaused = false;
+    callback?.();
+  },
+  skipCinematic() {
+    if (this.suspenseActive) return this.finishSuspense();
+    if (this.storyActive) return this.finishStoryBeat();
+    if (this.finaleActive) return this.finishFinale();
+  },
   beginFloorTransition(targetFloor = this.run?.floor + 1, pendingRun = null) {
     if (!this.run || this.transitioning || targetFloor <= this.run.floor || targetFloor > 13) return;
     clearTimeout(this.transitionTimer);
-    this.transitioning = true; this.transitionStage = "closing"; this.transitionFromFloor = this.run.floor; this.transitionTargetFloor = targetFloor; this.pendingTransitionRun = pendingRun;
+    this.transitioning = true; this.timePaused = true; this.cinematicStage = "closing"; this.transitionStage = "closing"; this.transitionFromFloor = this.run.floor; this.transitionTargetFloor = targetFloor; this.pendingTransitionRun = pendingRun;
     const screen = document.getElementById("game-screen"); screen.classList.add("transitioning"); screen.setAttribute("aria-busy", "true");
     Floor13Audio.play("doorClose");
     Floor13UI.startFloorTransition(this.transitionFromFloor, targetFloor, "closing");
     Floor13UI.setStatus(`DOORS CLOSING // FLOOR ${String(targetFloor).padStart(2, "0")}`, "DOORS CLOSING");
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const durations = reducedMotion ? { ...FLOOR_TRANSITION_DURATIONS, closing: 0, traveling: 0, arrival: 0, opening: 0 } : FLOOR_TRANSITION_DURATIONS;
-    const advance = (stage, delay, callback) => { this.transitionStage = stage; Floor13UI.updateFloorTransition(stage); this.transitionTimer = setTimeout(callback, delay); };
+    const advance = (stage, delay, callback) => { this.cinematicStage = stage; this.transitionStage = stage; Floor13UI.updateFloorTransition(stage); this.transitionTimer = setTimeout(callback, delay); };
     this.transitionTimer = setTimeout(() => {
-      Floor13Audio.play("step"); Floor13Audio.play("ascent");
+      Floor13Audio.play("step"); Floor13Audio.play("ascent"); Floor13Audio.play("floorTick");
       advance("traveling", durations.traveling, () => {
         const nextRun = this.pendingTransitionRun;
         if (nextRun) this.run = nextRun;
         else {
-          this.run.floor = this.transitionTargetFloor; this.run.attempts = 0;
+          this.run.floor = this.transitionTargetFloor; this.run.attempts = 0; this.run.bonusAttempts = 0;
           if (this.run.mode === "PASS_PLAY") { this.run.activePlayerIndex = (this.run.activePlayerIndex + 1) % this.run.players.length; this.run.handle = this.run.players[this.run.activePlayerIndex]; }
         }
         this.loadFloor();
-        Floor13Audio.play("arrival");
-        advance("arrival", durations.arrival, () => advance("opening", durations.opening, () => this.finishFloorTransition()));
+        Floor13Audio.play("arrival"); Floor13Audio.play("brake");
+        advance("arrival", durations.arrival, () => {
+          const story = LATE_FLOOR_STORIES[this.transitionTargetFloor];
+          if (!story) return advance("opening", durations.opening, () => this.finishFloorTransition());
+          this.storyActive = true; this.cinematicStage = "story"; this.transitionStage = "story"; Floor13Audio.duckMusic(0.16, SUSPENSE_DURATIONS.story + 300); Floor13Audio.play("cinematic"); Floor13UI.updateFloorTransition("story", story);
+          this.transitionTimer = window.setTimeout(() => this.finishStoryBeat(), reducedMotion ? 0 : SUSPENSE_DURATIONS.story);
+        });
       });
     }, durations.closing);
+  },
+  finishStoryBeat() {
+    if (!this.storyActive) return;
+    clearTimeout(this.transitionTimer); this.transitionTimer = null; this.storyActive = false;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const delay = reducedMotion ? 0 : FLOOR_TRANSITION_DURATIONS.opening;
+    this.cinematicStage = "opening"; this.transitionStage = "opening"; Floor13UI.updateFloorTransition("opening"); this.transitionTimer = window.setTimeout(() => this.finishFloorTransition(), delay);
   },
   finishFloorTransition() {
     clearTimeout(this.transitionTimer); this.transitionTimer = null;
     const arrivedFloor = this.transitionTargetFloor; const passPlayPlayer = this.run?.mode === "PASS_PLAY" ? this.run.handle : "";
-    this.transitioning = false; this.transitionStage = "idle"; this.transitionTargetFloor = 0; this.transitionFromFloor = 0; this.pendingTransitionRun = null;
+    this.transitioning = false; this.transitionStage = "idle"; this.cinematicStage = "idle"; this.transitionTargetFloor = 0; this.transitionFromFloor = 0; this.pendingTransitionRun = null; this.timePaused = false;
     const screen = document.getElementById("game-screen"); screen.classList.remove("transitioning"); screen.setAttribute("aria-busy", "false");
     Floor13UI.finishFloorTransition(arrivedFloor);
     Floor13Audio.play("doorOpen");
@@ -454,9 +537,20 @@ const Floor13Engine = {
   },
   finishRun(won) {
     clearInterval(this.timerHandle); this.run.result = won ? "COMPLETE" : "FAILED"; this.run.elapsedMs = Date.now() - this.run.startedAt;
-    Floor13Audio.play(won ? "clear" : "failure");
     const result = { seed: this.run.seed, mode: this.run.mode, playerHandle: this.run.handle, outcome: this.run.result, floorReached: won ? 13 : this.run.floor, puzzlesSolved: this.run.solvedFloors.length, guessesUsed: this.run.guesses.length, lifelinesUsed: Object.values(this.run.lifelines).filter(value => !value).length, elapsedMs: this.run.elapsedMs, createdAt: new Date().toISOString() };
-    Floor13Storage.saveResult(result); Floor13Storage.remove(STORAGE_KEYS.active); Floor13UI.openTerminal(won, result, this.targetWord);
+    const complete = () => { Floor13Audio.play(won ? "clear" : "failure"); Floor13Storage.saveResult(result); Floor13Storage.remove(STORAGE_KEYS.active); Floor13UI.openTerminal(won, result, this.targetWord); };
+    if (!won || this.run.floor !== 13) return complete();
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    this.finaleActive = true; this.timePaused = true; this.cinematicStage = "finale"; this.transitionTargetFloor = 13; this.transitionFromFloor = 13; this.finaleResult = result;
+    document.getElementById("game-screen").classList.add("finale-active"); document.getElementById("game-screen").setAttribute("aria-busy", "true");
+    Floor13Audio.duckMusic(0.12, SUSPENSE_DURATIONS.finale + 400); Floor13Audio.play("cinematic"); Floor13UI.startFloorTransition(13, 13, "finale"); Floor13UI.setStatus("FLOOR 13 // FINAL CLEAR", "THE TOP FLOOR IS LISTENING");
+    clearTimeout(this.transitionTimer); this.transitionTimer = window.setTimeout(() => this.finishFinale(), reducedMotion ? 0 : SUSPENSE_DURATIONS.finale);
+  },
+  finishFinale() {
+    if (!this.finaleActive) return;
+    clearTimeout(this.transitionTimer); this.transitionTimer = null; this.finaleActive = false; this.cinematicStage = "idle"; this.transitionStage = "idle"; this.transitionTargetFloor = 0; this.transitionFromFloor = 0; this.timePaused = false;
+    document.getElementById("game-screen").classList.remove("finale-active"); document.getElementById("game-screen").setAttribute("aria-busy", "false"); Floor13UI.finishFloorTransition();
+    const result = this.finaleResult; this.finaleResult = null; if (result) { Floor13Audio.play("clear"); Floor13Storage.saveResult(result); Floor13Storage.remove(STORAGE_KEYS.active); Floor13UI.openTerminal(true, result, this.targetWord); }
   },
   evaluateGuess(guess, target) {
     const result = Array(target.length).fill("absent"); const remaining = target.split("");
@@ -464,14 +558,14 @@ const Floor13Engine = {
     guess.split("").forEach((letter, index) => { if (result[index] !== "absent") return; const targetIndex = remaining.indexOf(letter); if (targetIndex > -1) { result[index] = "present"; remaining[targetIndex] = null; } });
     return result;
   },
-  useReveal() { if (this.transitioning || !this.run?.lifelines.reveal || (this.mode === "ONLINE" && this.run.activePlayerId !== Floor13Remote.uid)) return; const apply = () => { this.run.lifelines.reveal = false; const position = this.currentGuess.findIndex((letter, index) => letter !== this.targetWord[index]); if (position > -1) this.currentGuess[position] = this.targetWord[position]; Floor13Audio.play("reveal"); Floor13UI.setStatus(`LETTER ${position + 1} REVEALED`); Floor13UI.updateCurrentGuess(); Floor13UI.updateHeader(); }; if (this.mode === "ONLINE") return void Floor13Remote.useLifeline("reveal", this.run.version).then(apply).catch(error => Floor13UI.setStatus(error.message)); apply(); },
-  useClue() { if (this.transitioning || !this.run?.lifelines.clue || (this.mode === "ONLINE" && this.run.activePlayerId !== Floor13Remote.uid)) return; const apply = () => { this.run.lifelines.clue = false; Floor13Audio.play("clue"); Floor13UI.openFeedback(this.targetWordMetadata); Floor13UI.updateHeader(); }; if (this.mode === "ONLINE") return void Floor13Remote.useLifeline("clue", this.run.version).then(apply).catch(error => Floor13UI.setStatus(error.message)); apply(); },
-  useFifty() { if (this.transitioning || !this.run?.lifelines.fifty || (this.mode === "ONLINE" && this.run.activePlayerId !== Floor13Remote.uid)) return; const apply = () => { this.run.lifelines.fifty = false; const candidates = "QWERTYUIOPASDFGHJKLZXCVBNM".split("").filter(letter => !this.targetWord.includes(letter)); const count = Math.floor(candidates.length / 2); this.shatteredKeys = new Set(candidates.slice(0, count)); this.shatteredKeys.forEach(letter => document.querySelector(`[data-key="${letter}"]`)?.classList.add("shattered")); Floor13Audio.play("fifty"); Floor13UI.setStatus(`${count} WRONG LETTERS DISABLED`); Floor13UI.updateHeader(); }; if (this.mode === "ONLINE") return void Floor13Remote.useLifeline("fifty", this.run.version).then(apply).catch(error => Floor13UI.setStatus(error.message)); apply(); },
+  useReveal() { if (this.isCinematicLocked() || !this.run?.lifelines.reveal || (this.mode === "ONLINE" && this.run.activePlayerId !== Floor13Remote.uid)) return; const apply = () => { this.run.lifelines.reveal = false; const position = this.currentGuess.findIndex((letter, index) => letter !== this.targetWord[index]); if (position > -1) this.currentGuess[position] = this.targetWord[position]; Floor13Audio.play("reveal"); Floor13UI.setStatus(`LETTER ${position + 1} REVEALED`); Floor13UI.updateCurrentGuess(); Floor13UI.updateHeader(); }; if (this.mode === "ONLINE") return void Floor13Remote.useLifeline("reveal", this.run.version).then(apply).catch(error => Floor13UI.setStatus(error.message)); apply(); },
+  useReroute() { if (this.isCinematicLocked() || !this.run?.lifelines.reroute || (this.mode === "ONLINE" && this.run.activePlayerId !== Floor13Remote.uid)) return; const apply = () => { this.run.lifelines.reroute = false; this.run.bonusAttempts = 1; Floor13Storage.write(STORAGE_KEYS.active, this.run); Floor13Audio.play("reroute"); Floor13UI.setStatus("REROUTE AUTHORIZED // ONE EXTRA ATTEMPT", "ONE EXTRA ATTEMPT CLEARED"); Floor13UI.updateHeader(); }; if (this.mode === "ONLINE") return void Floor13Remote.useLifeline("reroute", this.run.version).then(apply).catch(error => Floor13UI.setStatus(error.message)); apply(); },
+  useFifty() { if (this.isCinematicLocked() || !this.run?.lifelines.fifty || (this.mode === "ONLINE" && this.run.activePlayerId !== Floor13Remote.uid)) return; const apply = () => { this.run.lifelines.fifty = false; const candidates = "QWERTYUIOPASDFGHJKLZXCVBNM".split("").filter(letter => !this.targetWord.includes(letter)); const count = Math.floor(candidates.length / 2); this.shatteredKeys = new Set(candidates.slice(0, count)); this.shatteredKeys.forEach(letter => document.querySelector(`[data-key="${letter}"]`)?.classList.add("shattered")); Floor13Audio.play("fifty"); Floor13UI.setStatus(`${count} WRONG LETTERS DISABLED`); Floor13UI.updateHeader(); }; if (this.mode === "ONLINE") return void Floor13Remote.useLifeline("fifty", this.run.version).then(apply).catch(error => Floor13UI.setStatus(error.message)); apply(); },
   dailySeed() { return this.hashSeed(new Date().toISOString().slice(0, 10)); },
   hashSeed(value) { let hash = 2166136261; for (let index = 0; index < value.length; index += 1) hash = Math.imul(hash ^ value.charCodeAt(index), 16777619); return Math.abs(hash >>> 0); }
 };
 
-const Floor13InputController = { init() { window.addEventListener("keydown", event => { if (document.querySelector(".overlay-visible")) { if (event.key === "Escape") Floor13UI.closeTopOverlay(); return; } if (event.key === "Backspace") Floor13Engine.removeLetter(); else if (event.key === "Enter") Floor13Engine.submitCurrentRow(); else if (/^[a-zA-Z]$/.test(event.key)) Floor13Engine.addLetter(event.key.toUpperCase()); }); } };
+const Floor13InputController = { init() { window.addEventListener("keydown", event => { if (Floor13Engine.suspenseActive || Floor13Engine.storyActive || Floor13Engine.finaleActive) { if (["Enter", "Escape", " "].includes(event.key)) { event.preventDefault(); Floor13Engine.skipCinematic(); } return; } if (document.querySelector(".overlay-visible")) { if (event.key === "Escape") Floor13UI.closeTopOverlay(); return; } if (event.key === "Backspace") Floor13Engine.removeLetter(); else if (event.key === "Enter") Floor13Engine.submitCurrentRow(); else if (/^[a-zA-Z]$/.test(event.key)) Floor13Engine.addLetter(event.key.toUpperCase()); }); } };
 
 const Floor13UI = {
   chatMessageCount: null, chatUnread: 0,
@@ -481,7 +575,7 @@ const Floor13UI = {
       const action = event.target.closest("[data-action]")?.dataset.action; if (!action) return; Floor13Audio.unlock();
       const actions = {
         daily: () => Floor13Engine.startDaily(), challenge: () => Floor13Engine.startChallenge(), "pass-play": () => Floor13Engine.startPassPlay(), "online-room": () => this.openRoom(), "create-room": () => this.createRoom(), "join-room": () => this.joinRoom(), "start-room": () => this.startRoom(), "copy-room": () => this.copyRoom(), "leave-room": () => this.leaveRoom(), "close-room": () => this.closeRoom(), resume: () => Floor13Engine.resumeRun(), "board-elevator": () => Floor13Engine.enterElevator(), stats: () => this.openStats(), "game-stats": () => this.openStats(), audio: () => Floor13Audio.toggle(),
-        reveal: () => Floor13Engine.useReveal(), clue: () => Floor13Engine.useClue(), fifty: () => Floor13Engine.useFifty(), "close-feedback": () => this.closeFeedback(),
+        reveal: () => Floor13Engine.useReveal(), reroute: () => Floor13Engine.useReroute(), fifty: () => Floor13Engine.useFifty(), "skip-cinematic": () => Floor13Engine.skipCinematic(),
         "voice-enable": () => Floor13Voice.enable(),
         retry: () => { const mode = Floor13Engine.run?.mode || Floor13Engine.mode; const fresh = mode === "FREEPLAY" || (mode === "DAILY" && Floor13Engine.run?.result === "COMPLETE"); this.closeTerminal(); Floor13Engine.startRun(fresh ? "FREEPLAY" : mode, fresh ? Floor13Engine.freshSeed("replay") : Floor13Engine.seed, Floor13Engine.run?.players || [this.handle()]); if (fresh) this.setStatus("FRESH ASCENT GENERATED"); }, share: () => this.shareResult(), lobby: () => { this.closeAllOverlays(); Floor13Engine.showLobby(); },
         quit: () => { if (confirm("Leave this run? Your progress will be saved.")) Floor13Engine.showLobby(); }, "handoff-ready": () => this.closeHandoff(), "close-stats": () => this.closeStats()
@@ -524,10 +618,11 @@ const Floor13UI = {
   paintGuess(row, word, evaluation) { word.split("").forEach((letter, index) => { const cell = document.getElementById(`cell-${row}-${index}`); if (!cell) return; cell.textContent = letter; cell.classList.add("filled", evaluation[index]); cell.setAttribute("aria-label", `${letter}, ${evaluation[index]}`); }); },
   renderKeyboard() { const wrapper = document.getElementById("keyboard-wrapper"); wrapper.innerHTML = ""; [["Q","W","E","R","T","Y","U","I","O","P"],["A","S","D","F","G","H","J","K","L"],["ENTER","Z","X","C","V","B","N","M","BACKSPACE"]].forEach(row => { const rowElement = document.createElement("div"); rowElement.className = "keyboard-row"; row.forEach(key => { const button = document.createElement("button"); button.type = "button"; button.className = "keyboard-key"; button.dataset.key = key; button.textContent = key === "BACKSPACE" ? "⌫" : key === "ENTER" ? "↵" : key; button.setAttribute("aria-label", key === "BACKSPACE" ? "Backspace" : key === "ENTER" ? "Submit guess" : `Letter ${key}`); button.addEventListener("click", () => key === "ENTER" ? Floor13Engine.submitCurrentRow() : key === "BACKSPACE" ? Floor13Engine.removeLetter() : Floor13Engine.addLetter(key)); rowElement.appendChild(button); }); wrapper.appendChild(rowElement); }); },
   updateKeyboardStates() { const states = {}; Floor13Engine.run?.guesses.filter(guess => guess.floor === Floor13Engine.run.floor).forEach(guess => guess.word.split("").forEach((letter, index) => { const next = guess.evaluation[index]; if (next === "correct" || (next === "present" && states[letter] !== "correct")) states[letter] = next; else if (!states[letter]) states[letter] = "absent"; })); document.querySelectorAll(".keyboard-key[data-key]").forEach(button => { const state = states[button.dataset.key]; if (state) button.classList.add(state); }); },
-  updateHeader() { if (!Floor13Engine.run) return; const floor = Floor13Engine.run.floor; document.getElementById("stat-level").textContent = `FLOOR ${String(floor).padStart(2, "0")} / 13`; document.getElementById("stat-player").textContent = Floor13Engine.run.handle.toUpperCase(); document.getElementById("stat-timer").textContent = this.formatTime(Floor13Engine.run.elapsedMs); document.getElementById("mode-label").textContent = Floor13Engine.run.mode.replace("_", " "); document.getElementById("floor-progress").style.width = `${((floor - 1) / 12) * 100}%`; const remaining = Object.values(Floor13Engine.run.lifelines).filter(Boolean).length; document.getElementById("lifeline-status").textContent = `${remaining} AVAILABLE`; ["reveal", "clue", "fifty"].forEach(name => { const button = document.getElementById(`btn-${name}`); button.disabled = floor === 1 || !Floor13Engine.run.lifelines[name]; button.classList.toggle("spent", button.disabled); }); this.updateBoardingState(); this.updateParallax(); },
+  updateHeader() { if (!Floor13Engine.run) return; const floor = Floor13Engine.run.floor; document.getElementById("stat-level").textContent = `FLOOR ${String(floor).padStart(2, "0")} / 13`; document.getElementById("stat-player").textContent = Floor13Engine.run.handle.toUpperCase(); document.getElementById("stat-timer").textContent = this.formatTime(Floor13Engine.run.elapsedMs); document.getElementById("mode-label").textContent = Floor13Engine.run.mode.replace("_", " "); document.getElementById("floor-progress").style.width = `${((floor - 1) / 12) * 100}%`; const remaining = Object.values(Floor13Engine.run.lifelines).filter(Boolean).length; document.getElementById("lifeline-status").textContent = `${remaining} AVAILABLE`; ["reveal", "reroute", "fifty"].forEach(name => { const button = document.getElementById(`btn-${name}`); button.disabled = floor === 1 || !Floor13Engine.run.lifelines[name] || Floor13Engine.isCinematicLocked(); button.classList.toggle("spent", button.disabled); }); this.updateFloorHud(); this.updateBoardingState(); this.updateParallax(); },
   updateBoardingState() { const floor = Floor13Engine.run?.floor || 1; document.getElementById("boarding-copy").textContent = floor === 1 ? "Step into the car. Floor 02 is waiting with a two-letter code." : `The car is moving through the building. Next stop: floor ${String(Math.min(13, floor + 1)).padStart(2, "0")}.`; },
+  updateFloorHud() { const floor = Floor13Engine.run?.floor || 1; const target = Floor13Engine.transitioning ? Floor13Engine.transitionTargetFloor : floor < 13 ? floor + 1 : 13; const direction = Floor13Engine.transitioning ? "↑" : floor < 13 ? "↑" : "—"; const stage = Floor13Engine.cinematicStage; const status = stage === "suspense" ? "FINAL ATTEMPT // HOLD" : stage === "story" ? "STORY SIGNAL" : stage === "finale" ? "FINAL CLEAR" : floor === 1 ? "LOBBY // READY" : floor === 13 ? "TOP FLOOR // READY" : "PUZZLE // READY"; document.getElementById("floor-hud-current").textContent = String(floor).padStart(2, "0"); document.getElementById("floor-hud-direction").textContent = direction; document.getElementById("floor-hud-status").textContent = status; document.getElementById("floor-hud-destination").textContent = Floor13Engine.transitioning ? `DESTINATION ${String(target).padStart(2, "0")}` : floor < 13 ? `NEXT STOP ${String(target).padStart(2, "0")}` : "BUILDING CLEAR"; document.getElementById("floor-hud").setAttribute("aria-label", `Current floor ${floor} of 13. ${Floor13Engine.transitioning ? `Traveling to floor ${target}.` : status}.`); },
   startFloorTransition(fromFloor, toFloor, stage) { const overlay = document.getElementById("elevator-transition"); overlay.hidden = false; overlay.setAttribute("aria-hidden", "false"); overlay.className = "transition-active"; document.getElementById("transition-from-floor").textContent = String(fromFloor).padStart(2, "0"); document.getElementById("transition-to-floor").textContent = String(toFloor).padStart(2, "0"); this.updateFloorTransition(stage); },
-  updateFloorTransition(stage) { const labels = { closing: ["DOORS CLOSING", "Securing the car before ascent."], traveling: ["ASCENDING", "The shaft is clear. Hold steady."], arrival: ["ARRIVAL CONFIRMED", `Floor ${String(Floor13Engine.transitionTargetFloor).padStart(2, "0")} is standing by.`], opening: ["DOORS OPENING", "New floor, new code. The board is ready."] }; const [label, copy] = labels[stage] || labels.closing; const overlay = document.getElementById("elevator-transition"); overlay.classList.remove("transition-closing", "transition-traveling", "transition-arrival", "transition-opening"); overlay.classList.add(`transition-${stage}`); document.getElementById("transition-stage").textContent = label; document.getElementById("transition-copy").textContent = copy; if (Floor13Engine.transitioning) this.setStatus(`${label} // FLOOR ${String(Floor13Engine.transitionTargetFloor).padStart(2, "0")}`, label); },
+  updateFloorTransition(stage, story = null) { const labels = { closing: ["DOORS CLOSING", "Securing the car before ascent."], traveling: ["ASCENDING", "The shaft is clear. Hold steady."], arrival: ["ARRIVAL CONFIRMED", `Floor ${String(Floor13Engine.transitionTargetFloor).padStart(2, "0")} is standing by.`], opening: ["DOORS OPENING", "New floor, new code. The board is ready."], suspense: ["FINAL ATTEMPT", "The last available row is waiting for a verdict."], story: [story?.label || "STORY SIGNAL", story?.copy || "The building has something left to say."], finale: ["ASCENT COMPLETE", "The thirteenth floor has opened its eyes."] }; const [label, copy] = labels[stage] || labels.closing; const overlay = document.getElementById("elevator-transition"); overlay.classList.remove("transition-closing", "transition-traveling", "transition-arrival", "transition-opening", "transition-suspense", "transition-story", "transition-finale"); overlay.classList.add(`transition-${stage}`); document.getElementById("transition-stage").textContent = label; document.getElementById("transition-copy").textContent = copy; const skip = document.getElementById("transition-skip"); skip.hidden = !["suspense", "story", "finale"].includes(stage); if (Floor13Engine.transitioning || Floor13Engine.suspenseActive || Floor13Engine.storyActive || Floor13Engine.finaleActive) this.setStatus(`${label} // FLOOR ${String(Floor13Engine.transitionTargetFloor || Floor13Engine.run?.floor || 1).padStart(2, "0")}`, label); this.updateFloorHud(); },
   finishFloorTransition() { const overlay = document.getElementById("elevator-transition"); overlay.hidden = true; overlay.setAttribute("aria-hidden", "true"); overlay.className = ""; const board = document.getElementById("board-canvas"); if (board) board.focus(); },
   updateParallax() { const floor = Floor13Engine.run?.floor || 1; document.getElementById("game-screen")?.style.setProperty("--floor-shift", `${(floor - 1) * -3}px`); },
   formatTime(ms) { const totalSeconds = Math.floor(ms / 1000); return `${String(Math.floor(totalSeconds / 60)).padStart(2, "0")}:${String(totalSeconds % 60).padStart(2, "0")}`; },
@@ -535,8 +630,6 @@ const Floor13UI = {
   shakeActiveRow(invalid = false) { const row = document.querySelector(`.board-row[data-row="${Floor13Engine.run.attempts}"]`); if (row) { row.classList.remove("shake-error"); row.classList.toggle("invalid-row", invalid); void row.offsetWidth; row.classList.add("shake-error"); } },
   showInvalidEntry(guess) { const panel = document.getElementById("invalid-entry"); document.getElementById("invalid-entry-message").textContent = `${guess} is not cleared for this floor.`; panel.hidden = false; panel.classList.remove("invalid-entry-flash"); void panel.offsetWidth; panel.classList.add("invalid-entry-flash"); this.shakeActiveRow(true); this.setStatus(`${guess} // UNKNOWN WORD // ATTEMPT RETAINED`, "EDIT ROW // TRY AGAIN"); },
   clearInvalidEntry() { const panel = document.getElementById("invalid-entry"); if (!panel.hidden) { panel.hidden = true; panel.classList.remove("invalid-entry-flash"); this.setStatus(""); } document.querySelector(`.board-row[data-row="${Floor13Engine.run?.attempts}"]`)?.classList.remove("invalid-row"); },
-  openFeedback(metadata) { this.lastFocusedElement = document.activeElement; document.getElementById("feedback-pos").textContent = metadata.pos || "FIELD NOTE"; document.getElementById("feedback-copy").textContent = metadata.hint; this.showOverlay("feedback-overlay"); document.querySelector("#feedback-panel .panel-close").focus(); },
-  closeFeedback() { const returnTarget = this.lastFocusedElement?.disabled ? document.getElementById("board-canvas") : this.lastFocusedElement; if (returnTarget && !returnTarget.hasAttribute("tabindex")) returnTarget.setAttribute("tabindex", "-1"); returnTarget?.focus?.(); this.hideOverlay("feedback-overlay"); },
   openTerminal(won, result, answer) { this.lastFocusedElement = document.activeElement; document.getElementById("modal-eyebrow").textContent = won ? "BUILDING 13 // CLEAR" : "BUILDING 13 // FAILURE REPORT"; document.getElementById("modal-headline").textContent = won ? "ASCENT COMPLETE" : "CABLES SNAPPED"; document.getElementById("modal-summary").textContent = won ? "You reached the thirteenth floor and took the elevator beyond superstition." : `The elevator stopped on floor ${result.floorReached}. The answer code was ${answer}.`; document.getElementById("result-stats").innerHTML = `<span><b>${result.floorReached}</b><small>FLOOR REACHED</small></span><span><b>${result.guessesUsed}</b><small>GUESSES</small></span><span><b>${this.formatTime(result.elapsedMs)}</b><small>TIME</small></span>`; document.getElementById("terminal-light").classList.toggle("success", won); this.showOverlay("terminal-overlay"); document.getElementById("modal-action-btn").focus(); },
   closeTerminal() { this.hideOverlay("terminal-overlay"); },
   shareResult() { const result = Floor13Storage.getResults()[0]; const text = result ? `TRISKAIDEKAPHOBIA // ${result.outcome === "COMPLETE" ? "13 FLOORS" : `FLOOR ${result.floorReached}`} // ${result.guessesUsed} guesses // ${this.formatTime(result.elapsedMs)} // seed ${result.seed}` : "TRISKAIDEKAPHOBIA // FLOOR 13"; const copy = navigator.clipboard?.writeText(text); copy?.then(() => this.setStatus("RESULT COPIED TO CLIPBOARD")).catch(() => this.setStatus(text)); if (!copy) this.setStatus(text); },
@@ -548,10 +641,10 @@ const Floor13UI = {
   showLobbyStatus(message, error = false) { const element = document.getElementById("lobby-status"); element.textContent = message; element.classList.toggle("error", error); },
   showOverlay(id) { const overlay = document.getElementById(id); overlay.classList.remove("overlay-hidden"); overlay.classList.add("overlay-visible"); overlay.setAttribute("aria-hidden", "false"); },
   hideOverlay(id) { const overlay = document.getElementById(id); overlay.classList.add("overlay-hidden"); overlay.classList.remove("overlay-visible"); overlay.setAttribute("aria-hidden", "true"); },
-  closeTopOverlay() { ["feedback-overlay", "terminal-overlay", "handoff-overlay", "stats-overlay", "room-overlay"].some(id => { if (document.getElementById(id).classList.contains("overlay-visible")) { if (id === "feedback-overlay") this.closeFeedback(); else if (id === "room-overlay") this.closeRoom(); else this.hideOverlay(id); return true; } return false; }); },
-  closeAllOverlays() { if (document.getElementById("room-overlay").classList.contains("overlay-visible")) this.closeRoom(); ["feedback-overlay", "terminal-overlay", "handoff-overlay", "stats-overlay"].forEach(id => this.hideOverlay(id)); }
+  closeTopOverlay() { ["terminal-overlay", "handoff-overlay", "stats-overlay", "room-overlay"].some(id => { if (document.getElementById(id).classList.contains("overlay-visible")) { if (id === "room-overlay") this.closeRoom(); else this.hideOverlay(id); return true; } return false; }); },
+  closeAllOverlays() { if (document.getElementById("room-overlay").classList.contains("overlay-visible")) this.closeRoom(); ["terminal-overlay", "handoff-overlay", "stats-overlay"].forEach(id => this.hideOverlay(id)); }
 };
 
-window.render_game_to_text = () => { const floorLogVisible = document.getElementById("feedback-overlay")?.classList.contains("overlay-visible"); return JSON.stringify({ screen: document.getElementById("game-screen").hidden ? "lobby" : "game", mode: Floor13Engine.run?.mode || "LOBBY", seed: Floor13Engine.run?.seed || null, player: Floor13Engine.run?.handle || null, floor: Floor13Engine.run?.floor || 0, attempt: Floor13Engine.run?.attempts || 0, currentGuess: Floor13Engine.currentGuess.join(""), lifelines: Floor13Engine.run?.lifelines || {}, transitioning: Floor13Engine.transitioning, transitionStage: Floor13Engine.transitionStage, transitionFromFloor: Floor13Engine.transitionFromFloor, transitionTargetFloor: Floor13Engine.transitionTargetFloor, timer: Floor13Engine.run?.elapsedMs || 0, onlineRoom: Floor13Remote.roomId || null, activePlayerId: Floor13Engine.run?.activePlayerId || null, chatMessageCount: document.querySelectorAll("#chat-messages .chat-message").length, invalidEntry: !document.getElementById("invalid-entry")?.hidden, floorLogVisible, floorLog: floorLogVisible ? { pos: Floor13Engine.targetWordMetadata.pos, hint: Floor13Engine.targetWordMetadata.hint } : null, status: document.getElementById("status-live")?.textContent || "" }); };
-window.advanceTime = ms => { if (Floor13Engine.run?.result === "IN_PROGRESS") { Floor13Engine.run.elapsedMs += ms; Floor13Engine.run.startedAt -= ms; Floor13UI.updateHeader(); } };
+window.render_game_to_text = () => JSON.stringify({ screen: document.getElementById("game-screen").hidden ? "lobby" : "game", mode: Floor13Engine.run?.mode || "LOBBY", seed: Floor13Engine.run?.seed || null, player: Floor13Engine.run?.handle || null, floor: Floor13Engine.run?.floor || 0, attempt: Floor13Engine.run?.attempts || 0, currentGuess: Floor13Engine.currentGuess.join(""), lifelines: Floor13Engine.run?.lifelines || {}, transitioning: Floor13Engine.transitioning, transitionStage: Floor13Engine.transitionStage, transitionFromFloor: Floor13Engine.transitionFromFloor, transitionTargetFloor: Floor13Engine.transitionTargetFloor, hudCurrentFloor: Floor13Engine.run?.floor || 0, hudTargetFloor: Floor13Engine.transitioning ? Floor13Engine.transitionTargetFloor : Floor13Engine.run?.floor < 13 ? (Floor13Engine.run?.floor || 1) + 1 : 13, hudDirection: Floor13Engine.transitioning ? "up" : Floor13Engine.run?.floor < 13 ? "up" : "idle", suspenseActive: Floor13Engine.suspenseActive, cinematicStage: Floor13Engine.cinematicStage, timePaused: Floor13Engine.timePaused, attemptLimit: Floor13Engine.attemptLimit(), timer: Floor13Engine.run?.elapsedMs || 0, onlineRoom: Floor13Remote.roomId || null, activePlayerId: Floor13Engine.run?.activePlayerId || null, chatMessageCount: document.querySelectorAll("#chat-messages .chat-message").length, invalidEntry: !document.getElementById("invalid-entry")?.hidden, status: document.getElementById("status-live")?.textContent || "" });
+window.advanceTime = ms => { if (Floor13Engine.run?.result === "IN_PROGRESS" && !Floor13Engine.timePaused) { Floor13Engine.run.elapsedMs += ms; Floor13Engine.run.startedAt -= ms; Floor13UI.updateHeader(); } };
 window.onload = () => { document.getElementById("player-handle").value = Floor13Storage.read(STORAGE_KEYS.handle, "Operator"); Floor13Engine.boot().then(() => { const params = new URLSearchParams(window.location.search); if (params.get("seed")) Floor13Engine.startRun(params.get("mode") === "challenge" ? "CHALLENGE" : "DAILY", Number(params.get("seed")) || Floor13Engine.dailySeed()); if (params.get("room")) { document.getElementById("room-code").value = params.get("room").toUpperCase(); Floor13UI.openRoom(); } }); };
