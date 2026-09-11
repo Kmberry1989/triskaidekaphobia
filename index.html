@@ -16,16 +16,16 @@
       <div class="lobby-hero">
         <p class="eyebrow">THE ELEVATOR IS WAITING</p>
         <h1 id="lobby-title">TRISKAIDEKAPHOBIA</h1>
-        <p class="lobby-copy">Board on floor one. Face a two-letter code on floor two, then climb one letter at a time until floor thirteen.</p>
+        <p class="lobby-copy">Thirteen floors. One way up.</p>
       </div>
       <div class="lobby-controls">
         <label for="player-handle">CALL SIGN</label>
         <input id="player-handle" maxlength="16" autocomplete="nickname" value="Operator">
         <div class="mode-grid">
-          <button class="mode-card primary" data-action="daily" type="button"><span class="mode-kicker" id="daily-run-kicker">TODAY'S RUN</span><strong id="daily-run-title">DAILY ASCENT</strong><span id="daily-run-description">Same seed for everyone.</span></button>
-          <button class="mode-card" data-action="challenge" type="button"><span class="mode-kicker">SEND A CABLE</span><strong>CREATE CHALLENGE</strong><span>Make a replayable seed link.</span></button>
-          <button class="mode-card" data-action="pass-play" type="button"><span class="mode-kicker">TWO OPERATORS</span><strong>PASS &amp; PLAY</strong><span>Share one device, floor by floor.</span></button>
-          <button class="mode-card" data-action="online-room" type="button"><span class="mode-kicker">PRIVATE LINK</span><strong>ONLINE ROOM</strong><span>Climb together with chat.</span></button>
+          <button class="mode-card primary" data-action="daily" type="button"><span class="mode-kicker" id="daily-run-kicker">TODAY</span><strong id="daily-run-title">DAILY ASCENT</strong><span id="daily-run-description">Shared seed.</span></button>
+          <button class="mode-card" data-action="challenge" type="button"><span class="mode-kicker">LINK</span><strong>CHALLENGE</strong><span>Send a seed.</span></button>
+          <button class="mode-card" data-action="pass-play" type="button"><span class="mode-kicker">TWO PLAYERS</span><strong>PASS &amp; PLAY</strong><span>One device.</span></button>
+          <button class="mode-card" data-action="online-room" type="button"><span class="mode-kicker">PRIVATE</span><strong>ONLINE ROOM</strong><span>Climb together.</span></button>
         </div>
         <div class="lobby-secondary">
           <button class="text-button" data-action="resume" type="button" id="resume-btn" hidden>↻ RESUME RUN</button>
@@ -52,11 +52,11 @@
           <div class="transition-door transition-door-right"></div>
         </div>
         <div class="transition-readout">
-          <span class="eyebrow">BUILDING 13 // TRANSIT</span>
+          <span class="eyebrow">B13</span>
           <strong id="transition-stage">DOORS CLOSING</strong>
           <div class="transition-floor-line"><span id="transition-from-floor">01</span><span class="transition-arrow" aria-hidden="true">↑</span><span id="transition-to-floor">02</span></div>
-          <p id="transition-copy">Securing the car before ascent.</p>
-          <button id="transition-skip" class="text-button" data-action="skip-cinematic" type="button" hidden>SKIP MOMENT</button>
+          <p id="transition-copy"></p>
+          <button id="transition-skip" class="text-button" data-action="skip-cinematic" type="button" hidden>SKIP</button>
         </div>
       </div>
       <header>
@@ -79,12 +79,12 @@
       </section>
       <main id="board-canvas" aria-label="Word board"></main>
       <div id="side-panel">
-        <section id="lifeline-hud" aria-label="Emergency lifelines">
-          <div class="lifeline-copy"><span class="eyebrow">EMERGENCY KIT</span><span id="lifeline-status">3 AVAILABLE</span></div>
-          <div class="lifeline-actions">
-            <button id="btn-reveal" class="lifeline-btn" data-action="reveal" type="button" aria-label="Reveal one correct letter"><span>◉</span><small>REVEAL</small></button>
-            <button id="btn-reroute" class="lifeline-btn" data-action="reroute" type="button" aria-label="Authorize one extra attempt on this floor"><span>↕</span><small>REROUTE</small></button>
-            <button id="btn-fifty" class="lifeline-btn" data-action="fifty" type="button" aria-label="Remove half of the wrong letters"><span>⌁</span><small>50:50</small></button>
+        <section id="lifeline-hud" aria-label="Emergency kit">
+          <button id="emergency-kit-toggle" class="emergency-kit-toggle" data-action="toggle-kit" type="button" aria-expanded="false" aria-controls="lifeline-actions"><span><span class="eyebrow">EMERGENCY KIT</span><span id="lifeline-status">3 READY</span></span><b aria-hidden="true">⌄</b></button>
+          <div id="lifeline-actions" class="lifeline-actions" hidden>
+            <button id="btn-reveal" class="lifeline-btn" data-action="reveal" type="button" aria-label="Use the two-way intercom to reveal one correct letter"><span>☎</span><small>INTERCOM</small></button>
+            <button id="btn-reroute" class="lifeline-btn" data-action="reroute" type="button" aria-label="Use battery backup to authorize one extra attempt"><span>▰</span><small>BATTERY</small></button>
+            <button id="btn-fifty" class="lifeline-btn" data-action="fifty" type="button" aria-label="Use the emergency stop to disable half of the wrong letters"><span>■</span><small>STOP</small></button>
           </div>
         </section>
         <section id="online-chat" aria-labelledby="online-chat-title" hidden>
