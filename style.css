@@ -92,22 +92,17 @@ h1 { color: var(--copper); font-size: clamp(1.6rem, 5vw, 2.6rem); letter-spacing
 #game-screen.ascending .parallax-horizon { animation: horizonAscend .72s cubic-bezier(.2,.72,.2,1); filter: blur(.8px); }
 #game-screen.ascending .parallax-city { animation: cityAscend .72s cubic-bezier(.2,.72,.2,1), cityDrift 24s linear infinite; filter: blur(.7px) saturate(1.08); }
 #game-screen.ascending .parallax-reflection { animation: reflectionAscend .72s ease-in-out; filter: blur(1px); }
-header { border-bottom: 1px dashed var(--line); padding: 1px 0 8px; }
+header { border-bottom: 1px dashed var(--line); padding: 1px 0 50px; }
 .header-main { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .header-main h1 { font-size: clamp(1.05rem, 4.6vw, 1.8rem); margin-top: 2px; }
 .header-actions { display: flex; gap: 3px; }
 .header-icon, .panel-close { width: 30px; height: 30px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; font-size: 1.1rem; }
 .header-icon:hover, .panel-close:hover { color: var(--text); border-color: var(--line); }
-#floor-hud { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; margin-top: 9px; padding: 6px 8px; border: 1px solid rgba(210,146,82,.45); border-radius: 4px; background: linear-gradient(105deg, rgba(8,9,12,.92), rgba(37,25,20,.76)); box-shadow: inset 0 0 18px rgba(210,146,82,.06), 0 4px 15px rgba(0,0,0,.18); transition: border-color .25s, box-shadow .25s, transform .25s; }
-.floor-hud-display { display: flex; align-items: center; gap: 5px; min-width: 84px; color: #f07c55; text-shadow: 0 0 9px rgba(240,124,85,.75), 0 0 18px rgba(240,124,85,.28); }
-.floor-hud-display strong { font-family: "Courier New", Courier, monospace; font-size: clamp(1.55rem, 7vw, 2.35rem); line-height: .84; letter-spacing: 3px; font-variant-numeric: tabular-nums; }
-#floor-hud-direction { display: inline-grid; place-items: center; width: 19px; height: 22px; color: var(--safe); font-size: 1.25rem; text-shadow: 0 0 9px rgba(145,201,160,.76); }
-.floor-hud-meta { min-width: 0; display: grid; gap: 2px; text-align: right; }
-.floor-hud-meta .eyebrow { font-size: .48rem; }
-#floor-hud-status, #floor-hud-destination { overflow: hidden; color: #e8d6c7; font-size: .55rem; letter-spacing: 1px; text-overflow: ellipsis; white-space: nowrap; }
-#floor-hud-destination { color: var(--copper); font-size: .5rem; }
-#game-screen.suspense-active #floor-hud, #game-screen.finale-active #floor-hud { border-color: rgba(255,74,66,.76); box-shadow: inset 0 0 22px rgba(255,74,66,.12), 0 0 18px rgba(255,74,66,.1); animation: hudFlicker .9s steps(2, end) infinite; }
-#game-screen.transitioning #floor-hud { border-color: rgba(145,201,160,.72); box-shadow: inset 0 0 22px rgba(145,201,160,.1), 0 0 18px rgba(145,201,160,.1); transform: scale(1.015); }
+#floor-hud { position: absolute !important; z-index: 3 !important; top: clamp(47px, 8svh, 67px); left: 50%; display: flex; align-items: center; gap: 5px; min-width: 83px; justify-content: center; padding: 5px 9px; border: 1px solid rgba(210,146,82,.58); border-radius: 3px; background: rgba(8,9,12,.84); box-shadow: inset 0 0 15px rgba(210,146,82,.11), 0 3px 12px rgba(0,0,0,.28); color: #f07c55; text-shadow: 0 0 9px rgba(240,124,85,.75), 0 0 18px rgba(240,124,85,.28); transform: translateX(-50%); transition: border-color .25s, box-shadow .25s, transform .25s; }
+#floor-hud-current { font-family: "Courier New", Courier, monospace; font-size: clamp(1.35rem, 6vw, 2rem); line-height: .84; letter-spacing: 3px; font-variant-numeric: tabular-nums; }
+#floor-hud-direction { display: inline-grid; place-items: center; width: 16px; color: var(--safe); font-size: 1rem; text-shadow: 0 0 9px rgba(145,201,160,.76); }
+#game-screen.finale-active #floor-hud { border-color: rgba(255,74,66,.76); box-shadow: inset 0 0 22px rgba(255,74,66,.12), 0 0 18px rgba(255,74,66,.1); animation: hudFlicker .9s steps(2, end) infinite; }
+#game-screen.transitioning #floor-hud { border-color: rgba(145,201,160,.72); box-shadow: inset 0 0 22px rgba(145,201,160,.1), 0 0 18px rgba(145,201,160,.1); transform: translateX(-50%) scale(1.015); }
 #stats-bar { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .62rem; letter-spacing: .5px; margin-top: 9px; }
 .progress-track { height: 3px; background: #242429; margin-top: 8px; overflow: hidden; }
 #floor-progress { display: block; width: 0; height: 100%; background: var(--copper); box-shadow: 0 0 8px var(--copper); transition: width .7s ease; }
@@ -234,6 +229,7 @@ header { border-bottom: 1px dashed var(--line); padding: 1px 0 8px; }
 @keyframes cableFault { 0%,100% { transform: translate(0) rotate(0deg); filter: brightness(1); } 15% { transform: translate(-5px, 1px) rotate(-.7deg); filter: brightness(.45); } 31% { transform: translate(7px, -2px) rotate(.9deg); filter: brightness(1.55); } 48% { transform: translate(-8px, 2px) rotate(-1.1deg); filter: brightness(.35); } 67% { transform: translate(5px, -1px) rotate(.6deg); filter: brightness(1.25); } 84% { transform: translate(-3px, 1px) rotate(-.35deg); filter: brightness(.7); } }
 @keyframes faultLight { 0%,100% { opacity: 0; } 24%, 30%, 62% { opacity: .6; } 27%, 46%, 70% { opacity: .08; } }
 @keyframes correctSignal { 0% { filter: brightness(1); } 35% { filter: brightness(1.55) saturate(1.35); } 100% { filter: brightness(1); } }
+@keyframes inputCheckShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
 .ascent-pull { animation: elevatorPull .92s cubic-bezier(.2,.75,.22,1) both; }
 .ascent-pull #window-parallax { filter: brightness(1.13) contrast(1.1); }
 .wrong-feedback { animation: cableFault .55s steps(2, end) both; }
@@ -244,6 +240,8 @@ header { border-bottom: 1px dashed var(--line); padding: 1px 0 8px; }
 .wrong-level-5 { animation-duration: 1.08s; }
 .wrong-level-3::after, .wrong-level-4::after, .wrong-level-5::after { background: rgba(255,54,31,.56); }
 .correct-feedback { animation: correctSignal .72s ease-out both; }
+.check-feedback { animation: inputCheckShake .18s linear 3; }
+.check-feedback #board-canvas { animation: hudFlicker .2s steps(2, end) 3; }
 .shake-error { animation: elevatorWobble .32s ease-in-out; }
 @media (orientation: landscape) and (max-height: 600px) {
   #game-container { width: 100vw; max-width: 980px; min-height: 0; padding: 8px 12px; }
