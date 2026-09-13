@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="2048" viewBox="0 0 1536 2048" fill="none">
+  <defs>
+    <linearGradient id="night" x1="768" y1="0" x2="768" y2="2048" gradientUnits="userSpaceOnUse"><stop stop-color="#151A24"/><stop offset=".48" stop-color="#0C0E14"/><stop offset="1" stop-color="#050609"/></linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(768 730) rotate(90) scale(620 540)" gradientUnits="userSpaceOnUse"><stop stop-color="#B96C3B" stop-opacity=".24"/><stop offset="1" stop-color="#B96C3B" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1536" height="2048" fill="url(#night)"/>
+  <rect width="1536" height="2048" fill="url(#glow)"/>
+  <path d="M172 0V2048M1364 0V2048M374 0V2048M1162 0V2048" stroke="#D29252" stroke-opacity=".13" stroke-width="6"/>
+  <path d="M0 370H1536M0 1480H1536" stroke="#D29252" stroke-opacity=".1" stroke-width="4"/>
+  <circle cx="768" cy="730" r="280" stroke="#D29252" stroke-opacity=".12" stroke-width="3"/>
+</svg>
