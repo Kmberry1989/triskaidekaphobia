@@ -3,6 +3,36 @@ const MAX_ATTEMPTS = 6;
 // A car this old should feel heavy: transitions are paced as a small ceremony.
 const FLOOR_TRANSITION_DURATIONS = { boarding: 900, closing: 1250, traveling: 2600, arrival: 1150, opening: 1250 };
 const SUSPENSE_DURATIONS = { regular: 1050, late: 1350, final: 1700, story: 2300, finale: 2500 };
+const Floor13Theme = {
+  // Each field is checked independently. Bad or missing values retain the CSS/HTML defaults.
+  async load() {
+    let data;
+    try {
+      const response = await fetch("assets/data/theme.json");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      data = await response.json();
+    } catch (error) { console.warn("Theme unavailable; using built-in appearance.", error); return; }
+    if (!data || typeof data !== "object" || Array.isArray(data)) { console.warn("Theme must be a JSON object."); return; }
+    const color = value => typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
+    const copy = value => typeof value === "string" && value.trim().length > 0 && value.length <= 100 && !/[<>\x00-\x1f]/.test(value);
+    const applyFields = (source, fields, valid, apply) => {
+      if (source === undefined) return;
+      if (!source || typeof source !== "object" || Array.isArray(source)) { console.warn("Invalid theme section; using defaults."); return; }
+      for (const [key, target] of Object.entries(fields)) {
+        if (!(key in source)) continue;
+        if (valid(source[key])) apply(target, source[key]);
+        else console.warn(`Invalid theme value: ${key}; using default.`);
+      }
+    };
+    applyFields(data.colors, { background: "--bg", panel: "--panel", line: "--line", muted: "--muted", text: "--text", accent: "--copper", danger: "--red", correct: "--correct", present: "--present", absent: "--absent", safe: "--safe" }, color, (name, value) => document.documentElement.style.setProperty(name, value));
+    applyFields(data.lobby, { topline: ".lobby-topline .building-name", eyebrow: ".lobby-hero .eyebrow", title: "#lobby-title", subtitle: ".lobby-copy" }, copy, (selector, value) => { document.querySelector(selector).textContent = value; });
+    applyFields(data.keyboard, { border: "--key-border", faceLight: "--key-face-light", faceMid: "--key-face-mid", faceDark: "--key-face-dark", label: "--key-label", pressedLight: "--key-pressed-light", pressedMid: "--key-pressed-mid", pressedDark: "--key-pressed-dark", pressedLabel: "--key-pressed-label" }, color, (name, value) => document.documentElement.style.setProperty(name, value));
+    applyFields(data.keyboard, { radius: "--key-radius" }, value => value === "circle" || value === "rounded", (name, value) => document.documentElement.style.setProperty(name, value === "circle" ? "50%" : "12px"));
+    const milliseconds = value => Number.isInteger(value) && value >= 0 && value <= 10000;
+    applyFields(data.timings?.transition, Object.fromEntries(Object.keys(FLOOR_TRANSITION_DURATIONS).map(key => [key, key])), milliseconds, (key, value) => { FLOOR_TRANSITION_DURATIONS[key] = value; });
+    applyFields(data.timings?.suspense, Object.fromEntries(Object.keys(SUSPENSE_DURATIONS).map(key => [key, key])), milliseconds, (key, value) => { SUSPENSE_DURATIONS[key] = value; });
+  }
+};
 const LATE_FLOOR_STORIES = {
   10: { label: "THE SHAFT REMEMBERS", copy: "The indicator pauses between floors. Something below has learned your call sign." },
   11: { label: "UNLISTED STOP", copy: "A second bell sounds behind the walls. The panel insists there are only thirteen floors." },
@@ -689,4 +719,4 @@ const Floor13UI = {
 
 window.render_game_to_text = () => JSON.stringify({ screen: document.getElementById("game-screen").hidden ? "lobby" : "game", mode: Floor13Engine.run?.mode || "LOBBY", seed: Floor13Engine.run?.seed || null, player: Floor13Engine.run?.handle || null, floor: Floor13Engine.run?.floor || 0, attempt: Floor13Engine.run?.attempts || 0, currentGuess: Floor13Engine.currentGuess.join(""), lifelines: Floor13Engine.run?.lifelines || {}, emergencyKitOpen: !document.getElementById("lifeline-actions")?.hidden, deviceParallax: Floor13Motion.active, transitioning: Floor13Engine.transitioning, transitionStage: Floor13Engine.transitionStage, transitionFromFloor: Floor13Engine.transitionFromFloor, transitionTargetFloor: Floor13Engine.transitionTargetFloor, hudCurrentFloor: Floor13Engine.run?.floor || 0, hudTargetFloor: Floor13Engine.transitioning ? Floor13Engine.transitionTargetFloor : Floor13Engine.run?.floor < 13 ? (Floor13Engine.run?.floor || 1) + 1 : 13, hudDirection: Floor13Engine.transitioning ? "up" : Floor13Engine.run?.floor < 13 ? "up" : "idle", suspenseActive: Floor13Engine.suspenseActive, cinematicStage: Floor13Engine.cinematicStage, timePaused: Floor13Engine.timePaused, attemptLimit: Floor13Engine.attemptLimit(), timer: Floor13Engine.run?.elapsedMs || 0, onlineRoom: Floor13Remote.roomId || null, activePlayerId: Floor13Engine.run?.activePlayerId || null, chatMessageCount: document.querySelectorAll("#chat-messages .chat-message").length, invalidEntry: !document.getElementById("invalid-entry")?.hidden, status: document.getElementById("status-live")?.textContent || "" });
 window.advanceTime = ms => { if (Floor13Engine.run?.result === "IN_PROGRESS" && !Floor13Engine.timePaused) { Floor13Engine.run.elapsedMs += ms; Floor13Engine.run.startedAt -= ms; Floor13UI.updateHeader(); } };
-window.onload = () => { document.getElementById("player-handle").value = Floor13Storage.read(STORAGE_KEYS.handle, "Operator"); Floor13Engine.boot().then(() => { const params = new URLSearchParams(window.location.search); if (params.get("seed")) Floor13Engine.startRun(params.get("mode") === "challenge" ? "CHALLENGE" : "DAILY", Number(params.get("seed")) || Floor13Engine.dailySeed()); if (params.get("room")) { document.getElementById("room-code").value = params.get("room").toUpperCase(); Floor13UI.openRoom(); } }); };
+window.onload = async () => { document.getElementById("player-handle").value = Floor13Storage.read(STORAGE_KEYS.handle, "Operator"); await Floor13Theme.load(); await Floor13Engine.boot(); const params = new URLSearchParams(window.location.search); if (params.get("seed")) Floor13Engine.startRun(params.get("mode") === "challenge" ? "CHALLENGE" : "DAILY", Number(params.get("seed")) || Floor13Engine.dailySeed()); if (params.get("room")) { document.getElementById("room-code").value = params.get("room").toUpperCase(); Floor13UI.openRoom(); } };

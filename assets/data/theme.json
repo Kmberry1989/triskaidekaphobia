@@ -1,0 +1,49 @@
+{
+  "colors": {
+    "background": "#09090b",
+    "panel": "#131316",
+    "line": "#34343a",
+    "muted": "#9898a3",
+    "text": "#f0eef0",
+    "accent": "#d29252",
+    "danger": "#ff4a42",
+    "correct": "#63b86a",
+    "present": "#caa94e",
+    "absent": "#242429",
+    "safe": "#91c9a0"
+  },
+  "lobby": {
+    "topline": "BUILDING 13",
+    "eyebrow": "THE ELEVATOR IS WAITING",
+    "title": "TRISKAIDEKAPHOBIA",
+    "subtitle": "Thirteen floors. One way up."
+  },
+  "keyboard": {
+    "border": "#76513a",
+    "faceLight": "#866350",
+    "faceMid": "#4a3029",
+    "faceDark": "#100e10",
+    "label": "#fff4e8",
+    "pressedLight": "#fff2bc",
+    "pressedMid": "#f2a553",
+    "pressedDark": "#351310",
+    "pressedLabel": "#281109",
+    "radius": "circle"
+  },
+  "timings": {
+    "transition": {
+      "boarding": 900,
+      "closing": 1250,
+      "traveling": 2600,
+      "arrival": 1150,
+      "opening": 1250
+    },
+    "suspense": {
+      "regular": 1050,
+      "late": 1350,
+      "final": 1700,
+      "story": 2300,
+      "finale": 2500
+    }
+  }
+}

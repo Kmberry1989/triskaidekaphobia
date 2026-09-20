@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0c">
+  <title>Floor 13 — Image Prompt Board</title>
+  <style>
+    :root { color-scheme: dark; --ink: #eee6d9; --muted: #b8aa9a; --panel: #171416; --panel-hi: #211b1b; --copper: #d79a56; --line: rgba(215,154,86,.28); --success: #b6dc9c; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 0; min-height: 100dvh; background: radial-gradient(ellipse at 50% -20%, #39261e 0, #111012 42%, #080809 100%); color: var(--ink); font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    main { width: min(100%, 1120px); margin: 0 auto; padding: clamp(24px, 5vw, 72px) clamp(16px, 4vw, 36px) 48px; }
+    .eyebrow { margin: 0 0 8px; color: var(--copper); font-size: .73rem; font-weight: 700; letter-spacing: .15em; }
+    h1 { max-width: 14ch; margin: 0; font-family: Georgia, serif; font-size: clamp(2.25rem, 8vw, 5.25rem); font-weight: 500; line-height: .9; letter-spacing: -.045em; }
+    .lede { max-width: 70ch; margin: 24px 0 0; color: var(--muted); }
+    .notice { margin: 28px 0 34px; padding: 14px 16px; border: 1px solid var(--line); border-left: 3px solid var(--copper); background: rgba(23,20,22,.76); color: var(--muted); font-size: .9rem; }
+    .grid { display: grid; gap: 18px; }
+    .card { padding: clamp(16px, 3vw, 24px); border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(145deg, rgba(33,27,27,.94), rgba(20,18,20,.94)); box-shadow: 0 16px 45px rgba(0,0,0,.2); }
+    .card-head { display: flex; align-items: start; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
+    h2 { margin: 0; font-size: clamp(1rem, 2.4vw, 1.22rem); letter-spacing: .03em; }
+    .file { flex: 0 0 auto; margin: 0; color: var(--copper); font-size: .72rem; overflow-wrap: anywhere; text-align: right; }
+    .spec { margin: 0 0 14px; color: var(--muted); font-size: .83rem; }
+    textarea { display: block; width: 100%; min-height: 260px; resize: vertical; padding: 15px; border: 1px solid rgba(238,230,217,.18); border-radius: 8px; outline: none; background: #0d0d0f; color: var(--ink); font: .84rem/1.52 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    textarea:focus { border-color: var(--copper); box-shadow: 0 0 0 3px rgba(215,154,86,.14); }
+    .actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+    button { appearance: none; min-height: 42px; padding: 10px 14px; border: 1px solid var(--copper); border-radius: 6px; background: linear-gradient(180deg, #e5ad68, #ad6e36); color: #17100a; cursor: pointer; font: 700 .76rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .08em; }
+    button:hover { filter: brightness(1.08); }
+    button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    .copy-status { color: var(--muted); font-size: .76rem; }
+    .copy-status.ok { color: var(--success); }
+    footer { margin-top: 32px; color: var(--muted); font-size: .8rem; }
+    a { color: var(--copper); }
+    @media (max-width: 560px) { .card-head { display: block; } .file { margin-top: 5px; text-align: left; } textarea { min-height: 310px; font-size: .8rem; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">BUILDING 13 // ART DEPARTMENT</p>
+    <h1>Image Prompt Board</h1>
+    <p class="lede">Edit any prompt, then use its button to copy the whole thing directly into an image generator. These are the eight image assets the current game actually loads. They are written to preserve the game’s atmospheric elevator identity while leaving the interface text and motion to the app.</p>
+    <aside class="notice">Export to the exact filename shown on each card. Do not generate text, numbers, logos, watermarks, interface buttons, or baked-in UI—the game lays those on top. Audio, word data, and the unused supplied images are listed in the <a href="CUSTOMIZATION_CATALOG.md">customization catalog</a>, but they are not image-generation targets.</aside>
+
+    <section class="grid" aria-label="Image generation prompts">
+      <article class="card">
+        <div class="card-head"><h2>Elevator interior / motion background</h2><p class="file">assets/art/elevator-interior.png</p></div>
+        <p class="spec">PNG, landscape, 1672 × 941 or larger, 16:9-ish. This layer moves slightly with phone tilt.</p>
+        <textarea aria-label="Prompt for elevator interior">Cinematic first-person view from inside an old, elegant but slightly threatening freight elevator at night. Camera centered at standing eye level, looking toward a tall rectangular window in the back wall. Brushed dark brass and aged black steel wall panels, subtle rivets, warm tarnished copper trim, deep charcoal floor, restrained amber practical lighting, faint dust in the air, a suggestion of elevator cables and machinery reflected in the metal. The window should reveal only a dark vertical shaft and distant atmospheric glow, not a recognizable city. Compose the interior symmetrically with generous dark negative space around all edges and an uncluttered central window area. The scene must feel tactile, premium, moody, and grounded—not futuristic, not cartoonish, not horror-gore. No people, no hands, no buttons, no readable signs, no floor numbers, no letters, no logos, no watermark, no UI. Photorealistic cinematic game background, high detail, controlled contrast, soft film grain. Landscape 16:9 composition.</textarea>
+        <div class="actions"><button type="button" data-copy="0">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><h2>Outside shaft / parallax skyline</h2><p class="file">assets/art/outside-parallax.png</p></div>
+        <p class="spec">PNG, landscape, 1672 × 941 or larger, 16:9-ish. Used in multiple translucent moving layers.</p>
+        <textarea aria-label="Prompt for outside parallax">Atmospheric night view seen from a very high elevator shaft: a distant, abstract city far below and beyond, scattered warm windows, dim rooflines, soft cloud banks, hazy industrial silhouettes, faint sodium-vapor amber and cold blue-gray light. It should feel like the elevator is climbing through impossible height and depth. Keep all buildings small, soft, and far away; leave broad dark gradients and open atmospheric space so the image can be layered, blurred, and shifted for parallax. Avoid a sharp horizon, recognizable landmarks, readable signs, people, vehicles, logos, floor numbers, typography, UI, borders, or watermarks. Cinematic photorealistic matte-painting texture, low contrast in the distance, dark steel-blue shadows, sparse copper lights, vertical sense of scale. Landscape 16:9 composition.</textarea>
+        <div class="actions"><button type="button" data-copy="1">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><h2>Window reflection overlay</h2><p class="file">assets/art/glass-reflection-overlay.png</p></div>
+        <p class="spec">Transparent PNG, landscape, 1672 × 941. Keep nearly all pixels transparent.</p>
+        <textarea aria-label="Prompt for glass reflection overlay">Create a transparent PNG overlay for a dark elevator window: only extremely subtle, sparse reflections of brushed brass edges, a few soft diagonal glass glints, faint interior light streaks, and barely visible condensation or dust. Most of the canvas must remain fully transparent. The reflections must be gentle enough to sit over a dark moving skyline without obscuring it. No solid background, no room scene, no people, no readable text, no logos, no symbols, no buttons, no borders, no watermark. Premium cinematic glass texture, restrained warm copper-white highlights, wide landscape 16:9 composition, alpha transparency.</textarea>
+        <div class="actions"><button type="button" data-copy="2">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><h2>Elevator doors</h2><p class="file">assets/art/elevator-doors.jpeg</p></div>
+        <p class="spec">JPEG, landscape, 2752 × 1536 or larger. The game splits this image down the center to animate the two doors.</p>
+        <textarea aria-label="Prompt for elevator doors">Front-on, perfectly symmetrical pair of closed vintage elevator doors, centered seam exactly in the middle of the image. Heavy aged dark bronze and blackened steel, vertically brushed metal, narrow tarnished copper trim, subtle panel seams, small signs of use, soft reflections from low amber overhead light. The image must read as two matching halves that can slide apart from the exact center seam. Fill the entire frame with the doors and their immediate metal frame; no hallway, no people, no hands, no visible buttons, no readable signage, no floor indicators, no logos, no watermark, no text. Photorealistic cinematic production design, elegant Art Deco restraint, high material detail, moody but not too dark. Landscape 16:9 composition.</textarea>
+        <div class="actions"><button type="button" data-copy="3">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><h2>Control-panel texture and favicon</h2><p class="file">assets/art/elevator-control-panel.png</p></div>
+        <p class="spec">PNG, portrait, 1086 × 1448 or larger. Decorative crop on the boarding screen; also appears tiny as the tab icon.</p>
+        <textarea aria-label="Prompt for elevator control panel">Close-up portrait of a vintage elevator control panel, richly tactile and believable: blackened brushed metal, aged copper trim, circular amber lamp housings, inset screws, worn enamel, small glass indicator windows, relay hardware, and soft reflections. Compose a strong central cluster of circular controls that still reads clearly when reduced to a tiny square browser icon, but do not include readable letters, numbers, floor labels, logos, instructions, arrows, brand marks, people, hands, or watermark. The panel should feel expensive, old, mechanical, and slightly ominous, with warm amber light against deep charcoal steel. Photorealistic cinematic prop photography, portrait 3:4 composition, high detail, subtle grain.</textarea>
+        <div class="actions"><button type="button" data-copy="4">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><h2>Main-menu background</h2><p class="file">assets/art/menu/main-menu-background.png</p></div>
+        <p class="spec">PNG, portrait, 1536 × 2048 or larger, 3:4. Menu text and choices are placed over it.</p>
+        <textarea aria-label="Prompt for main menu background">A premium vertical key-art background for a psychological elevator word game called Floor 13, but with absolutely no title or typography in the image. Looking upward inside a vast shadowy elevator shaft: layered steel beams, dim service lights, faded copper accents, sparse mist, distant cables disappearing into blackness, a soft warm glow high above suggesting an unreachable floor. Reserve the central and lower-middle area as relatively calm, dark negative space for menu controls. Frame edges can carry architectural detail and subtle Art Deco geometry. The mood is immersive, elegant, claustrophobic, and suspenseful rather than violent or grotesque. No people, no elevator buttons, no doors in the foreground, no readable signs, no floor numbers, no letters, no logos, no watermark, no UI. Photorealistic cinematic game key art, black, charcoal, aged bronze, and restrained amber palette, vertical 3:4 composition.</textarea>
+        <div class="actions"><button type="button" data-copy="5">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><h2>Menu-options underlay</h2><p class="file">assets/art/menu/menu-options-underlay.svg</p></div>
+        <p class="spec">Transparent SVG, viewBox 0 0 640 480. Decorative line work beneath option cards.</p>
+        <textarea aria-label="Prompt for menu options underlay">Minimal transparent vector-style decorative underlay for a dark Art Deco elevator-game menu. Create thin, elegant, asymmetrical geometric copper line work: an implied elevator shaft grid, cable arcs, small rivet-like circles, and quiet mechanical diagram accents gathered around the outer edges. The center and four broad horizontal zones must remain mostly empty so interactive menu cards are legible above it. Use only muted tarnished-copper and very dark gray lines with lots of transparency. No background rectangle, no shading that blocks text, no readable words, no letters, no numbers, no logos, no watermark, no icons that look like buttons. Clean SVG-ready vector artwork, transparent canvas, 640 by 480 composition.</textarea>
+        <div class="actions"><button type="button" data-copy="6">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><h2>Menu title mark</h2><p class="file">assets/art/menu/menu-title-mark.svg</p></div>
+        <p class="spec">Transparent SVG, viewBox 0 0 360 180. A quiet decorative mark behind the HTML title.</p>
+        <textarea aria-label="Prompt for menu title mark">Small transparent vector ornament for the title area of an atmospheric vintage elevator game. Design a refined symmetrical Art Deco motif: a narrow elevator-door outline, a single upward cable line, restrained fan shapes, thin aged-copper strokes, and a soft halo-like geometry. It must sit behind a separate HTML title, so leave the center open and make the ornament subtle rather than dominant. No background fill, no readable title, no letters, no numbers, no arrows, no logo, no watermark, no button-like symbols. Elegant SVG-ready line art with plenty of transparency, muted tarnished copper on a transparent canvas, 360 by 180 composition.</textarea>
+        <div class="actions"><button type="button" data-copy="7">COPY PROMPT</button><span class="copy-status" aria-live="polite"></span></div>
+      </article>
+    </section>
+    <footer>After generation, export at the listed size and replace the matching file in place. SVG slots need actual vector SVG output; if your generator only makes a raster image, keep it as a reference until it is traced or exported to SVG.</footer>
+  </main>
+  <script>
+    const copy = async (button) => {
+      const card = button.closest('.card');
+      const textarea = card.querySelector('textarea');
+      const status = card.querySelector('.copy-status');
+      try {
+        await navigator.clipboard.writeText(textarea.value);
+        status.textContent = 'COPIED TO CLIPBOARD';
+        status.classList.add('ok');
+      } catch {
+        textarea.focus();
+        textarea.select();
+        const copied = document.execCommand('copy');
+        status.textContent = copied ? 'COPIED TO CLIPBOARD' : 'SELECTED — COPY MANUALLY';
+        status.classList.toggle('ok', copied);
+      }
+      window.setTimeout(() => { status.textContent = ''; status.classList.remove('ok'); }, 2200);
+    };
+    document.querySelectorAll('[data-copy]').forEach((button) => button.addEventListener('click', () => copy(button)));
+  </script>
+</body>
+</html>
