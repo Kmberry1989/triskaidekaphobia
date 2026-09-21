@@ -1,6 +1,6 @@
 # Triskaidekaphobia: no-code customization catalog
 
-Checked September 18, 2026. This is the inventory of files and settings you can change **without editing the game code**. Keep the same path and filename when replacing an active file; the game will pick up the replacement on the next refresh.
+Checked September 21, 2026. This is the inventory of files and settings you can change **without editing the game code**. Keep the same path and filename when replacing an active file; the game will pick up the replacement on the next refresh.
 
 For copy-ready, editable image-generator prompts and one-click copy buttons for every active visual slot, open [asset-prompt-board.html](./asset-prompt-board.html).
 
@@ -14,7 +14,9 @@ For copy-ready, editable image-generator prompts and one-click copy buttons for 
 
 ## Theme and lobby customization
 
-Edit [`assets/data/theme.json`](./assets/data/theme.json) as plain JSON, then refresh the served game. The file is active and contains the current look as a starter theme. You can omit individual properties; the built-in value remains. A missing file, malformed JSON, or invalid property also leaves the game usable with defaults. Check the browser console for a warning when a value is rejected.
+Edit [`assets/data/theme.json`](./assets/data/theme.json) as plain JSON, then refresh the served game. The committed **Building 13 — Default Copper** preset matches the built-in appearance, so it is a safe starting point and a known-good rollback. Its `_preset` block is documentation only; the loader ignores it. You can omit individual properties and unknown properties are ignored. A missing file, malformed JSON, invalid section, or invalid individual value keeps the corresponding built-in default without interrupting boot. The loader does not emit warnings for these expected fallback paths; browser developer tools may still report an ordinary failed network request if the file itself is missing.
+
+Recommended workflow: copy the preset before editing, change one section at a time, keep JSON keys and punctuation intact, then test the lobby and one floor transition at desktop and phone widths. To restore the shipped look, restore the committed preset or remove your custom properties.
 
 | JSON section | Editable fields | Accepted values |
 | --- | --- | --- |
@@ -24,7 +26,7 @@ Edit [`assets/data/theme.json`](./assets/data/theme.json) as plain JSON, then re
 | `timings.transition` | `boarding`, `closing`, `traveling`, `arrival`, `opening` | Whole milliseconds from 0 through 10000. These control floor-to-floor sequence stages. |
 | `timings.suspense` | `regular`, `late`, `final`, `story`, `finale` | Whole milliseconds from 0 through 10000. These control the checking hold, late-floor story, and finale holds. |
 
-Only listed fields are read. Timing edits apply to the game logic; reduced-motion users still get immediate transitions and holds. Keep `text`/`label` legible against their backgrounds and test both lobby and gameplay after color edits. The JSON is fetched from the same site as the game; use a web server rather than opening `index.html` directly from disk.
+Only listed fields are read. Timing edits apply to the game logic; reduced-motion users still get immediate transitions and holds. Keep `text`/`label` legible against their backgrounds and test both lobby and gameplay after color edits. The JSON is fetched from the same site as the game; use a web server rather than opening `index.html` directly from disk. Because fallback is intentionally quiet, validate JSON with a formatter or `node -e "JSON.parse(require('fs').readFileSync('assets/data/theme.json'))"` before publishing if a change does not appear.
 
 ## Artwork
 

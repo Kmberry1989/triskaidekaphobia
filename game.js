@@ -4,24 +4,23 @@ const MAX_ATTEMPTS = 6;
 const FLOOR_TRANSITION_DURATIONS = { boarding: 900, closing: 1250, traveling: 2600, arrival: 1150, opening: 1250 };
 const SUSPENSE_DURATIONS = { regular: 1050, late: 1350, final: 1700, story: 2300, finale: 2500 };
 const Floor13Theme = {
-  // Each field is checked independently. Bad or missing values retain the CSS/HTML defaults.
+  // This file is optional. Each field is checked independently and every fallback is silent.
   async load() {
     let data;
     try {
       const response = await fetch("assets/data/theme.json");
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) return;
       data = await response.json();
-    } catch (error) { console.warn("Theme unavailable; using built-in appearance.", error); return; }
-    if (!data || typeof data !== "object" || Array.isArray(data)) { console.warn("Theme must be a JSON object."); return; }
+    } catch (error) { return; }
+    if (!data || typeof data !== "object" || Array.isArray(data)) return;
     const color = value => typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
     const copy = value => typeof value === "string" && value.trim().length > 0 && value.length <= 100 && !/[<>\x00-\x1f]/.test(value);
     const applyFields = (source, fields, valid, apply) => {
       if (source === undefined) return;
-      if (!source || typeof source !== "object" || Array.isArray(source)) { console.warn("Invalid theme section; using defaults."); return; }
+      if (!source || typeof source !== "object" || Array.isArray(source)) return;
       for (const [key, target] of Object.entries(fields)) {
         if (!(key in source)) continue;
         if (valid(source[key])) apply(target, source[key]);
-        else console.warn(`Invalid theme value: ${key}; using default.`);
       }
     };
     applyFields(data.colors, { background: "--bg", panel: "--panel", line: "--line", muted: "--muted", text: "--text", accent: "--copper", danger: "--red", correct: "--correct", present: "--present", absent: "--absent", safe: "--safe" }, color, (name, value) => document.documentElement.style.setProperty(name, value));

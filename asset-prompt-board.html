@@ -14,6 +14,9 @@
     h1 { max-width: 14ch; margin: 0; font-family: Georgia, serif; font-size: clamp(2.25rem, 8vw, 5.25rem); font-weight: 500; line-height: .9; letter-spacing: -.045em; }
     .lede { max-width: 70ch; margin: 24px 0 0; color: var(--muted); }
     .notice { margin: 28px 0 34px; padding: 14px 16px; border: 1px solid var(--line); border-left: 3px solid var(--copper); background: rgba(23,20,22,.76); color: var(--muted); font-size: .9rem; }
+    .theme-preset { display: grid; gap: 8px; margin: -18px 0 34px; padding: 14px 16px; border: 1px solid rgba(182,220,156,.28); border-radius: 8px; background: rgba(15,24,18,.62); }
+    .theme-preset strong { color: var(--success); font-size: .82rem; letter-spacing: .06em; }
+    .theme-preset p { margin: 0; color: var(--muted); font-size: .84rem; }
     .grid { display: grid; gap: 18px; }
     .card { padding: clamp(16px, 3vw, 24px); border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(145deg, rgba(33,27,27,.94), rgba(20,18,20,.94)); box-shadow: 0 16px 45px rgba(0,0,0,.2); }
     .card-head { display: flex; align-items: start; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
@@ -39,6 +42,10 @@
     <h1>Image Prompt Board</h1>
     <p class="lede">Edit any prompt, then use its button to copy the whole thing directly into an image generator. These are the eight image assets the current game actually loads. They are written to preserve the game’s atmospheric elevator identity while leaving the interface text and motion to the app.</p>
     <aside class="notice">Export to the exact filename shown on each card. Do not generate text, numbers, logos, watermarks, interface buttons, or baked-in UI—the game lays those on top. Audio, word data, and the unused supplied images are listed in the <a href="CUSTOMIZATION_CATALOG.md">customization catalog</a>, but they are not image-generation targets.</aside>
+    <aside class="theme-preset">
+      <strong>PAIR ART WITH THE NO-CODE THEME PRESET</strong>
+      <p>Use <a href="assets/data/theme.json">assets/data/theme.json</a> to coordinate color roles, lobby copy, elevator-button styling, and cinematic timing with replacement art. Start from the shipped Default Copper preset; invalid or missing values quietly retain safe built-in defaults. Exact fields and limits are in the <a href="CUSTOMIZATION_CATALOG.md#theme-and-lobby-customization">theme catalog</a>.</p>
+    </aside>
 
     <section class="grid" aria-label="Image generation prompts">
       <article class="card">

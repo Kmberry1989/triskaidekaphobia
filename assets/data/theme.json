@@ -1,4 +1,10 @@
 {
+  "_preset": {
+    "name": "Building 13 — Default Copper",
+    "version": 1,
+    "description": "A production-safe preset matching the built-in game appearance. Edit only the values below; unknown fields are ignored and invalid or missing values keep their built-in defaults.",
+    "documentation": "CUSTOMIZATION_CATALOG.md"
+  },
   "colors": {
     "background": "#09090b",
     "panel": "#131316",
