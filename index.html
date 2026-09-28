@@ -24,7 +24,6 @@
         <div class="mode-grid">
           <button class="mode-card primary" data-action="daily" type="button"><span class="mode-kicker" id="daily-run-kicker">TODAY</span><strong id="daily-run-title">DAILY ASCENT</strong><span id="daily-run-description">Shared seed.</span></button>
           <button class="mode-card" data-action="challenge" type="button"><span class="mode-kicker">LINK</span><strong>CHALLENGE</strong><span>Send a seed.</span></button>
-          <button class="mode-card" data-action="pass-play" type="button"><span class="mode-kicker">TWO PLAYERS</span><strong>PASS &amp; PLAY</strong><span>One device.</span></button>
           <button class="mode-card" data-action="online-room" type="button"><span class="mode-kicker">PRIVATE</span><strong>ONLINE ROOM</strong><span>Climb together.</span></button>
         </div>
         <div class="lobby-secondary">
@@ -63,14 +62,15 @@
       </header>
       <section id="boarding-state" aria-labelledby="boarding-title">
         <span class="floor-marker">FLOOR 01 // LOBBY</span>
-        <h2 id="boarding-title">THE DOORS ARE OPEN</h2>
-        <p id="boarding-copy">Step into the car. Floor 02 is waiting with a two-letter code.</p>
-        <button class="outline-button" data-action="board-elevator" type="button">ENTER ELEVATOR</button>
+        <h2 id="boarding-title">CALL THE ELEVATOR</h2>
+        <p id="boarding-copy">Press the illuminated up control.</p>
+        <button id="call-elevator" class="call-elevator-button" data-action="call-elevator" type="button" aria-label="Call the elevator up to floor one"><span aria-hidden="true">↑</span></button>
+        <button id="board-elevator" class="outline-button" data-action="board-elevator" type="button" hidden>ENTER ELEVATOR</button>
       </section>
-      <main id="board-canvas" aria-label="Word board"></main>
+      <main id="board-canvas" tabindex="-1" aria-label="Word board"></main>
       <div id="side-panel">
         <section id="lifeline-hud" aria-label="Emergency kit">
-          <button id="emergency-kit-toggle" class="emergency-kit-toggle" data-action="toggle-kit" type="button" aria-expanded="false" aria-controls="lifeline-actions"><span><span class="eyebrow">EMERGENCY KIT</span><span id="lifeline-status">3 READY</span></span><b aria-hidden="true">⌄</b></button>
+          <button id="emergency-kit-toggle" class="emergency-kit-toggle" data-action="toggle-kit" type="button" aria-expanded="false" aria-controls="lifeline-actions"><span class="eyebrow">EMERGENCY KIT</span><b aria-hidden="true">⌄</b></button>
           <div id="lifeline-actions" class="lifeline-actions" hidden>
             <button id="btn-reveal" class="lifeline-btn" data-action="reveal" type="button" aria-label="Use the two-way intercom to reveal one correct letter"><span>☎</span><small>INTERCOM</small></button>
             <button id="btn-reroute" class="lifeline-btn" data-action="reroute" type="button" aria-label="Use battery backup to authorize one extra attempt"><span>▰</span><small>BATTERY</small></button>
@@ -100,7 +100,6 @@
 
   <div id="room-overlay" class="overlay-hidden" aria-hidden="true"><section id="room-panel" class="panel room-panel" role="dialog" aria-modal="true" aria-labelledby="room-title"><button class="panel-close" data-action="close-room" type="button" aria-label="Close online room">×</button><p class="eyebrow">BUILDING 13 // PRIVATE CHANNEL</p><h2 id="room-title">ONLINE ROOM</h2><div id="room-entry-view"><p>Open a private ascent for two operators.</p><p id="room-entry-status" class="room-status" role="status"></p><div class="room-entry-actions"><button class="outline-button" data-action="create-room" type="button">CREATE ROOM</button><label for="room-code">JOIN CODE</label><input id="room-code" maxlength="6" inputmode="latin" autocomplete="off" placeholder="ABC123"><button class="outline-button" data-action="join-room" type="button">JOIN ROOM</button></div></div><div id="room-waiting-view" hidden><p id="room-status" class="room-status" role="status"></p><div class="room-code-display"><span class="eyebrow">ROOM CODE</span><strong id="room-code-display">------</strong><button class="text-button" data-action="copy-room" type="button">COPY LINK</button></div><div id="room-players" class="room-players"></div><button class="outline-button" data-action="start-room" type="button" id="start-room-btn" disabled>START ASCENT</button><button class="text-button" data-action="leave-room" type="button">LEAVE ROOM</button></div><div id="room-chat" class="room-chat" hidden><div class="chat-heading"><span class="eyebrow">ROOM CHANNEL</span><span class="chat-tools"><span id="room-chat-unread" class="chat-unread" hidden>NEW</span><span id="room-chat-connection">OFFLINE</span><button id="room-voice-toggle" class="voice-toggle" data-action="voice-enable" type="button">ENABLE VOICE</button></span></div><div id="room-chat-messages" class="chat-messages" aria-live="polite" aria-label="Room messages"></div><form id="room-chat-form" class="chat-form"><label class="sr-only" for="room-chat-input">Send a room message</label><input id="room-chat-input" maxlength="280" autocomplete="off" placeholder="Transmit a note…"><button type="submit" aria-label="Send message">↵</button></form></div></section></div>
   <div id="terminal-overlay" class="overlay-hidden" aria-hidden="true"><section id="terminal-panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="modal-headline"><div id="terminal-light" class="terminal-light" aria-hidden="true"></div><p class="eyebrow" id="modal-eyebrow">ELEVATOR STATUS</p><h2 id="modal-headline">CABLES SNAPPED</h2><p id="modal-summary"></p><div id="result-stats" class="result-stats"></div><div class="modal-actions"><button id="modal-action-btn" class="outline-button" data-action="retry" type="button">BOARD AGAIN</button><button id="share-result-btn" class="text-button" data-action="share" type="button">COPY RESULT</button><button class="text-button" data-action="lobby" type="button">RETURN TO LOBBY</button></div></section></div>
-  <div id="handoff-overlay" class="overlay-hidden" aria-hidden="true"><section class="panel handoff-panel" role="dialog" aria-modal="true" aria-labelledby="handoff-title"><p class="eyebrow">PASS THE DEVICE</p><h2 id="handoff-title">NEXT OPERATOR</h2><p id="handoff-copy">Hand the device to the next operator when the elevator doors open.</p><button class="outline-button" data-action="handoff-ready" type="button">I HAVE THE DEVICE</button></section></div>
   <div id="stats-overlay" class="overlay-hidden" aria-hidden="true"><section class="panel stats-panel" role="dialog" aria-modal="true" aria-labelledby="stats-title"><button class="panel-close" data-action="close-stats" type="button" aria-label="Close stats">×</button><p class="eyebrow">BLACK BOX // RUN HISTORY</p><h2 id="stats-title">OPERATOR LOG</h2><div id="stats-summary" class="stats-summary"></div><div id="history-list" class="history-list"></div><button class="outline-button" data-action="close-stats" type="button">CLOSE LOG</button></section></div>
   <audio id="voice-audio" autoplay playsinline></audio>
   <script src="firebase-config.js"></script>

@@ -71,11 +71,12 @@ All active audio is OGG. The app gracefully continues if a sound cannot play, bu
 | `assets/audio/letter-input.ogg` | 0.38 s | **Active:** letter-button press. Played slower for delete. Also a **fallback** for the floor display tick. | 0.10–0.25 s crisp circular illuminated-button click; it should sound good in rapid repeats. |
 | `assets/audio/present-letter.ogg` | 0.31 s | **Active:** a correct letter in the wrong position. | 0.20–0.45 s small electrical acknowledgement, not a win sound. |
 | `assets/audio/invalid-word.ogg` | 1.19 s | **Active:** an invalid submitted word. Also layered with the malfunction effect after a wrong valid guess. | 0.65–1.20 s terse reject/buzzer. |
-| `assets/audio/failure.ogg` | 0.71 s | **Active:** the escalating wrong-guess malfunction layer and failed run. | 0.70–1.40 s cable strain, relay chatter, mechanical fault, or weakening cable. Make it non-musical and leave room for escalation through repeated playback. |
+| `assets/audio/failure.ogg` | 0.71 s | **Active:** the escalating wrong-guess malfunction layer. | 0.70–1.40 s cable strain, relay chatter, mechanical fault, or weakening cable. Make it non-musical and leave room for escalation through repeated playback. |
+| `assets/audio/game-over-placeholder.ogg` | 0.71 s | **Active placeholder:** game-over music when a run ends in failure. It currently duplicates `failure.ogg` so the slot works immediately. | Replace with a distinct 4–10 s failure cue or short musical resolve. Keep the exact filename; avoid a long loop because the result panel appears immediately. |
 | `assets/audio/correct.ogg` | 3.17 s | **Active:** correct answer. Also a **fallback** for late-floor cinematic sting. | 1.5–3.5 s warm elevator/service-bell ding with restrained success lift. |
 | `assets/audio/reveal.ogg` | 0.48 s | **Active:** Intercom emergency-kit effect (reveals one correct letter). | 0.35–0.75 s intercom click/line-open plus a brief reveal tone. |
 | `assets/audio/fifty-fifty.ogg` | 0.57 s | **Active:** both Battery Backup (extra attempt) and Emergency Stop (removes half of impossible keys). | 0.45–0.80 s utility-system confirm. It is shared by two items, so it should be neutral; dedicated versions require a code change. |
-| `assets/audio/pass-handoff.ogg` | 0.52 s | **Active:** pass-and-play handoff. | 0.35–0.70 s soft device/pass relay. |
+| `assets/audio/pass-handoff.ogg` | 0.52 s | **Unused legacy audio:** retained for source-history compatibility after Pass & Play was removed. | It is safe to leave in place or replace, but the game no longer plays it. |
 | `assets/audio/run-clear.ogg` | 1.28 s | **Active:** completed ascent/run clear. | 0.9–1.8 s final bell or resolving mechanical release. |
 | `assets/audio/floor-log.ogg` | 0.38 s | **Unused** | Safe to keep or replace as a future stats/history log sound; it has no effect today. |
 
@@ -117,3 +118,7 @@ These are editable files rather than media. They are not required for a visual/a
 ## What is not externally replaceable today
 
 Other interface copy and labels, menu choices, fonts and layout, floor count, shaking, light flicker, vibration patterns, door-motion keyframes, emergency-kit mechanics, and local history/save behavior still live in `index.html`, `style.css`, or `game.js`. The theme file changes the listed surface values; it does not change game rules or puzzle content.
+
+## Hidden developer asset mode
+
+Append `?dev=1` to the game URL, for example `https://triskaidekaphobia.vercel.app/?dev=1`. This diagnostic mode adds bold filename labels directly to the active visual surfaces, lists every visual source in a fixed overlay, and records audio filenames as music, ambience, and one-shot cues are played. Remove `?dev=1` (or open the normal URL) to return to the player view. The mode changes labels only; it does not replace assets or alter saved progress.
