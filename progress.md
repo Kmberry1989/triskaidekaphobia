@@ -16,6 +16,8 @@ Original prompt: PLEASE IMPLEMENT THIS PLAN: Triskaidekaphobia Daily Elevator Ar
 
 ## Verification TODOs
 
+- October 4, 2026: Added a unified interaction-feedback and suspense pass: all buttons now have responsive press/focus/glow feedback, text inputs illuminate on focus, typed cells animate in, confirmed keys glow, overlays and screen changes ease into place, voice transmission pulses, the call button breathes while ready, elevator travel gains moving shaft streaks and door-edge light, and guess checking now escalates through low/medium/high heartbeat-vignette tension based on floor and remaining attempts. Reduced-motion continues to collapse animation durations globally.
+
 - October 4, 2026: Correct-position letters now automatically populate the same positions in the next guess row. Confirmed cells use a subdued green treatment and accessible labels, keyboard/pointer entry skips them, Backspace preserves them, resumed and online-synchronized floors reconstruct them from shared guess history, and `render_game_to_text` exposes `confirmedLetters`.
 
 - October 4, 2026: Removed the visible in-game masthead and telemetry strip (`ELEVATOR SHAFT`, mode, title, `FLOOR ## / 13`, operator, timer, progress bar, and overhead floor number). The stats/history and return-to-lobby icon controls remain available in the upper-right corner, while the underlying IDs remain hidden so state updates and existing integrations continue safely.
