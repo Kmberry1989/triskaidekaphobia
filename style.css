@@ -122,6 +122,7 @@ header { border-bottom: 1px dashed var(--line); padding: 1px 0 50px; }
 .letter-box { flex: 1 1 0; width: 0; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; border: 1px solid #37373e; border-radius: 3px; background: #101014; color: var(--text); font-size: clamp(.48rem, calc(100vw / (var(--grid-columns) * 2.2)), 1.65rem); font-weight: bold; transition: background .2s, border-color .2s, transform .2s; }
 .letter-box.filled { border-color: #707078; }
 .letter-box.correct { color: #071009; background: var(--correct); border-color: var(--correct); }
+.letter-box.prefilled { color: #dff6e3; border-color: rgba(99,184,106,.8); background: rgba(34,82,43,.88); box-shadow: inset 0 0 12px rgba(99,184,106,.12); }
 .letter-box.present { color: #171207; background: var(--present); border-color: var(--present); }
 .letter-box.absent { color: #d4d2d4; background: var(--absent); border-color: var(--absent); }
 #side-panel { min-height: 0; display: grid; grid-template-rows: auto; gap: 8px; position: relative; }
