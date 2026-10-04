@@ -103,6 +103,7 @@ h1 { color: var(--copper); font-size: clamp(1.6rem, 5vw, 2.6rem); letter-spacing
 #game-screen.ascending .parallax-city { animation: cityAscend .72s cubic-bezier(.2,.72,.2,1), cityDrift 24s linear infinite; filter: blur(.7px) saturate(1.08); }
 #game-screen.ascending .parallax-reflection { animation: reflectionAscend .72s ease-in-out; filter: blur(1px); }
 header { border-bottom: 1px dashed var(--line); padding: 1px 0 50px; }
+#game-screen > header { position: absolute !important; z-index: 7 !important; top: 0; right: 0; border: 0; padding: 0; }
 .header-main { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .header-main h1 { font-size: clamp(1.05rem, 4.6vw, 1.8rem); margin-top: 2px; }
 .header-actions { display: flex; gap: 3px; }
