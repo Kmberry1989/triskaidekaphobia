@@ -134,7 +134,7 @@ const Floor13Remote = {
   listenVoiceSignals(callback) {
     this.voiceUnsubscribe?.();
     if (!this.roomId || !this.isReady()) return;
-    const signals = this.modules.query(this.modules.collection(this.sessionRef(), "voiceSignals"), this.modules.where("to", "==", this.uid), this.modules.limitToLast(40));
+    const signals = this.modules.query(this.modules.collection(this.sessionRef(), "voiceSignals"), this.modules.where("to", "==", this.uid));
     this.voiceUnsubscribe = this.modules.onSnapshot(signals, snapshot => snapshot.docChanges().forEach(change => { if (change.type === "added") callback({ id: change.doc.id, ...change.doc.data() }); }));
   },
   async updatePresence() {
@@ -237,7 +237,7 @@ const Floor13Voice = {
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.enabled = true; this.talking = false; this.updateTracks(); await this.connect(); Floor13UI.updateVoice();
-    } catch (error) { this.enabled = false; this.localStream?.getTracks().forEach(track => track.stop()); this.localStream = null; Floor13UI.setRoomStatus(error.name === "NotAllowedError" ? "Microphone access was declined. Text chat remains available." : "Microphone could not be enabled.", true); }
+    } catch (error) { this.enabled = false; this.localStream?.getTracks().forEach(track => track.stop()); this.localStream = null; console.warn("Voice could not be enabled.", error); Floor13UI.setRoomStatus(error.name === "NotAllowedError" ? "Microphone access was declined. Text chat remains available." : "Microphone could not be enabled. Text chat remains available.", true); }
   },
   async connect() {
     if (!this.enabled || !this.peerId || this.peerConnection) return;

@@ -80,11 +80,11 @@ service cloud.firestore {
               && request.resource.data.floor == resource.data.floor
               && request.resource.data.attempts == resource.data.attempts
               && request.resource.data.guesses == resource.data.guesses
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lifelines', 'version', 'updatedAt'])
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lifelines', 'bonusAttempts', 'version', 'updatedAt'])
               && (
-                (resource.data.lifelines.reveal == true && request.resource.data.lifelines.reveal == false && request.resource.data.lifelines.clue == resource.data.lifelines.clue && request.resource.data.lifelines.fifty == resource.data.lifelines.fifty)
-                || (resource.data.lifelines.clue == true && request.resource.data.lifelines.clue == false && request.resource.data.lifelines.reveal == resource.data.lifelines.reveal && request.resource.data.lifelines.fifty == resource.data.lifelines.fifty)
-                || (resource.data.lifelines.fifty == true && request.resource.data.lifelines.fifty == false && request.resource.data.lifelines.reveal == resource.data.lifelines.reveal && request.resource.data.lifelines.clue == resource.data.lifelines.clue)
+                (resource.data.lifelines.reveal == true && request.resource.data.lifelines.reveal == false && request.resource.data.lifelines.reroute == resource.data.lifelines.reroute && request.resource.data.lifelines.fifty == resource.data.lifelines.fifty && request.resource.data.bonusAttempts == resource.data.bonusAttempts)
+                || (resource.data.lifelines.reroute == true && request.resource.data.lifelines.reroute == false && request.resource.data.lifelines.reveal == resource.data.lifelines.reveal && request.resource.data.lifelines.fifty == resource.data.lifelines.fifty && request.resource.data.bonusAttempts == 1)
+                || (resource.data.lifelines.fifty == true && request.resource.data.lifelines.fifty == false && request.resource.data.lifelines.reveal == resource.data.lifelines.reveal && request.resource.data.lifelines.reroute == resource.data.lifelines.reroute && request.resource.data.bonusAttempts == resource.data.bonusAttempts)
               )
             )
             || (
@@ -112,7 +112,7 @@ service cloud.firestore {
                   request.resource.data.floor == resource.data.floor
                   && request.resource.data.solvedFloors == resource.data.solvedFloors
                   && request.resource.data.activePlayerId == resource.data.activePlayerId
-                  && ((request.resource.data.attempts == resource.data.attempts + 1 && request.resource.data.attempts < 6 && request.resource.data.result == 'IN_PROGRESS') || (request.resource.data.attempts == 6 && request.resource.data.result == 'FAILED'))
+                  && ((request.resource.data.attempts == resource.data.attempts + 1 && request.resource.data.attempts < 6 + resource.data.bonusAttempts && request.resource.data.result == 'IN_PROGRESS') || (request.resource.data.attempts == 6 + resource.data.bonusAttempts && request.resource.data.result == 'FAILED'))
                 )
                 || (
                   resource.data.floor == 13
